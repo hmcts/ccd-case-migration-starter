@@ -1,0 +1,16 @@
+plugins {
+  id 'org.springframework.boot' version '2.1.6.RELEASE' apply false
+  id 'io.spring.dependency-management' version '1.0.8.RELEASE'
+}
+
+group = 'uk.gov.hmcts.reform.migration'
+
+dependencyManagement {
+  imports {
+    mavenBom org.springframework.boot.gradle.plugin.SpringBootPlugin.BOM_COORDINATES
+  }
+}
+
+dependencies {
+  compile group: 'com.fasterxml.jackson.module', name: 'jackson-module-parameter-names'
+}

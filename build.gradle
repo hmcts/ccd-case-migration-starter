@@ -1,50 +1,34 @@
-plugins {
-    id 'application'
-    id 'io.spring.dependency-management' version '1.0.8.RELEASE'
-    id 'org.springframework.boot' version '2.1.5.RELEASE'
-    id 'com.github.ben-manes.versions' version '0.21.0'
-}
-
 group = 'uk.gov.hmcts.reform'
 version = '1.0.0'
 
-sourceCompatibility = '11'
-targetCompatibility = '11'
+subprojects {
+  apply plugin: 'java'
 
-mainClassName = 'uk.gov.hmcts.reform.migration.CaseMigrationRunner'
+  sourceCompatibility = '11'
+  targetCompatibility = '11'
 
-compileJava {
+  compileJava {
     options.compilerArgs << '-parameters' << '-Xlint:deprecation'
-}
+  }
 
-compileTestJava {
+  compileTestJava {
     options.compilerArgs << '-Xlint:deprecation'
-}
+  }
 
-repositories {
+  repositories {
     mavenLocal()
     jcenter()
 
     maven { url "https://dl.bintray.com/hmcts/hmcts-maven" }
     maven { url "http://repo.maven.apache.org/maven2" }
-}
+  }
 
-def versions = [
+  def versions = [
     lombok: '1.18.8'
-]
+  ]
 
-dependencies {
+  dependencies {
     annotationProcessor group: 'org.projectlombok', name: 'lombok', version: versions.lombok
     compileOnly group: 'org.projectlombok', name: 'lombok', version: versions.lombok
-
-    compile group: 'org.springframework', name: 'spring-context-support'
-    compile group: 'com.fasterxml.jackson.module', name: 'jackson-module-parameter-names'
-    compile group: 'uk.gov.hmcts.reform', name: 'java-logging', version: '5.0.1'
-    compile group: 'uk.gov.hmcts.reform', name: 'idam-client', version: '1.0.2'
-    compile group: 'uk.gov.hmcts.reform', name: 'service-auth-provider-client', version: '3.0.0'
-    compile group: 'uk.gov.hmcts.reform', name: 'core-case-data-store-client', version: '4.6.4'
-    compile group: 'io.rest-assured', name: 'rest-assured', version: '3.3.0'
-
-    testCompile group: 'org.springframework.boot', name: 'spring-boot-starter-test'
-    testCompile group: 'com.github.tomakehurst', name: 'wiremock', version: '2.23.2'
+  }
 }

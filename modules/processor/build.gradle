@@ -1,0 +1,22 @@
+plugins {
+  id 'application'
+  id 'org.springframework.boot' version '2.1.6.RELEASE'
+  id 'io.spring.dependency-management' version '1.0.8.RELEASE'
+}
+
+group = 'uk.gov.hmcts.reform.migration'
+
+mainClassName = 'uk.gov.hmcts.reform.migration.CaseMigrationRunner'
+
+dependencies {
+  compile group: 'org.springframework', name: 'spring-context-support'
+  compile group: 'com.fasterxml.jackson.module', name: 'jackson-module-parameter-names'
+  compile group: 'uk.gov.hmcts.reform', name: 'java-logging', version: '5.0.1'
+  compile group: 'uk.gov.hmcts.reform', name: 'idam-client', version: '1.0.2'
+  compile group: 'uk.gov.hmcts.reform', name: 'service-auth-provider-client', version: '3.0.0'
+  compile group: 'uk.gov.hmcts.reform', name: 'core-case-data-store-client', version: '4.6.4'
+  compile group: 'io.rest-assured', name: 'rest-assured', version: '3.3.0'
+
+  testCompile group: 'org.springframework.boot', name: 'spring-boot-starter-test'
+  testCompile group: 'com.github.tomakehurst', name: 'wiremock', version: '2.23.2'
+}
