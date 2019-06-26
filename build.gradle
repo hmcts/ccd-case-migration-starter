@@ -1,8 +1,15 @@
-group = 'uk.gov.hmcts.reform'
-version = '1.0.0'
+plugins {
+  id 'org.springframework.boot' version '2.1.6.RELEASE' apply false
+  id 'io.spring.dependency-management' version '1.0.8.RELEASE' apply false
+}
 
 subprojects {
   apply plugin: 'java'
+  apply plugin: 'maven-publish'
+  apply plugin: 'io.spring.dependency-management'
+
+  group = 'uk.gov.hmcts.reform.ccd-case-migration'
+  version = '1.0.0'
 
   sourceCompatibility = '11'
   targetCompatibility = '11'
@@ -22,6 +29,12 @@ subprojects {
     maven { url "https://dl.bintray.com/hmcts/hmcts-maven" }
     maven { url "http://repo.maven.apache.org/maven2" }
   }
+  
+  dependencyManagement {
+    imports {
+      mavenBom org.springframework.boot.gradle.plugin.SpringBootPlugin.BOM_COORDINATES
+    }
+  }
 
   def versions = [
     lombok: '1.18.8'
@@ -30,5 +43,13 @@ subprojects {
   dependencies {
     annotationProcessor group: 'org.projectlombok', name: 'lombok', version: versions.lombok
     compileOnly group: 'org.projectlombok', name: 'lombok', version: versions.lombok
+  }
+
+  publishing {
+    publications {
+      maven(MavenPublication) {
+        from components.java
+      }
+    }
   }
 }

@@ -1,10 +1,6 @@
 plugins {
   id 'application'
-  id 'org.springframework.boot' version '2.1.6.RELEASE'
-  id 'io.spring.dependency-management' version '1.0.8.RELEASE'
 }
-
-group = 'uk.gov.hmcts.reform.migration'
 
 mainClassName = 'uk.gov.hmcts.reform.migration.CaseMigrationRunner'
 
