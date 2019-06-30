@@ -66,8 +66,8 @@ idam.client.secret= # IDAM OAuth2 client secret used to authenticate system upda
 idam.client.redirect_uri= # IDAM OAuth2 redirect URL used to authenticate system update user
 
 idam.s2s-auth.url= # S2S API URL used to authenticate service (pointing to localhost version of S2S API by default)
-#idam.s2s-auth.microservice= # S2S micro service name used to authenticate service
-#idam.s2s-auth.totp_secret= # S2S micro service secret used to authenticate service
+idam.s2s-auth.microservice= # S2S micro service name used to authenticate service
+idam.s2s-auth.totp_secret= # S2S micro service secret used to authenticate service
 
 core_case_data.api.url= # CCD data store API URL used to fetch / update case details (pointing to localhost version of CCD by default)
 
