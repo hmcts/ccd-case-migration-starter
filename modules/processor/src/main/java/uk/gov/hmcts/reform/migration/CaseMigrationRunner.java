@@ -14,11 +14,11 @@ import uk.gov.hmcts.reform.idam.client.IdamClient;
 @PropertySource("classpath:application.properties")
 public class CaseMigrationRunner implements CommandLineRunner {
 
-    @Value("${idam.username}")
+    @Value("${migration.idam.username}")
     private String idamUsername;
-    @Value("${idam.password}")
+    @Value("${migration.idam.password}")
     private String idamPassword;
-    @Value("${ccd.caseId}")
+    @Value("${migration.caseId}")
     private String ccdCaseId;
     @Autowired
     private IdamClient idamClient;

@@ -23,9 +23,9 @@ import java.util.stream.IntStream;
 @Service
 public class CoreCaseDataService {
 
-    @Value("${ccd.jurisdiction}")
+    @Value("${migration.jurisdiction}")
     private String jurisdiction;
-    @Value("${ccd.casetype}")
+    @Value("${migration.caseType}")
     private String caseType;
 
     @Autowired

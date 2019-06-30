@@ -31,9 +31,9 @@ public class CaseMigrationProcessorTest {
     private static final String EVENT_SUMMARY = "Migrate Case";
     private static final String EVENT_DESCRIPTION = "Migrate Case";
 
-    private final CaseDetails caseDetails1 = createCaseDetails(1111L, "FPL1");
-    private final CaseDetails caseDetails2 = createCaseDetails(1112L, "FPL2");
-    private final CaseDetails caseDetails3 = createCaseDetails(1113L, "FPL3");
+    private final CaseDetails caseDetails1 = createCaseDetails(1111L, "case-1");
+    private final CaseDetails caseDetails2 = createCaseDetails(1112L, "case-2");
+    private final CaseDetails caseDetails3 = createCaseDetails(1113L, "case-3");
 
     @InjectMocks
     private CaseMigrationProcessor caseMigrationProcessor;
