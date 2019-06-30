@@ -1,0 +1,25 @@
+sudo: required
+language: java
+jdk:
+  - oraclejdk8
+before_cache:
+  - rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
+  - rm -fr $HOME/.gradle/caches/*/plugin-resolution/
+cache:
+  directories:
+    - $HOME/.gradle/caches/
+    - $HOME/.gradle/wrapper/
+script:
+  - ./gradlew build
+deploy:
+  - provider: releases
+    api_key:
+      secure: hfkl3E/Iel3Be+J2L+1FMU7t5MQmNOSMlOwBBcBEqwn/BZtxEK5WfwMf1qRU8wKO88KkoQBelyKbFnxmi29pzsPt0AiVVXoCck/mhRYbkNmHwwk9VWmtlr1YY+0fhADkM+Tqs7famUdQRHs4soTUJ2F+fqty55J5xl5FUgyL6Iw0Zh4W8DsqRTeX1vyCDy8SqZMMLbS+iD9dbsnQx08KrtI9Dz8iS/3NZjmuI0YI7qgdcELK2rpNoTGHH9LeEAtWcIpFTIXVy4ozHxk4wRISUqtv5vzfsnpu1HLVCU+p0wCVwQgD4BzbNM3nbUIP+9+N6QsJBnuxo/JrSKEJnV0F9JkwmvvTqd+FyCykE4KBy1B4TAC1bDtligCNtl3CCzhRJiJ1ZQRRm4trYIZDvY0YaoBfup6HmKTuTo29bm5lxyW9IHqxdgpzUUf0tnaTX3gXbXWxKxp4QhcXwlKTLeZQnKjEcZffpkyzMlzY9ttG1GOlvDGXnXH/MSpuMLt3xFZ/tcgeuKnnQufjGxgc3p6Z05HuVZ+CIA+nVdNnXlGF0pdi7+GL2GrN6DyVmyU7ofnbf3Tb2CxDzKQXMRqM8kG7IzFQDxcisTbPSSL54PJEwcfwENwvQRoIM5JJo4SS9LwO321arF02w0i545FyiGjxr3j+IpuLYx5VdAfvQJ53pjY=
+    file_glob: true
+    file:
+      - modules/domain/build/libs/domain-*.jar
+      - modules/processor/build/libs/processor-*.jar
+    skip_cleanup: true
+    on:
+      repo: hmcts/ccd-case-migration-starter
+      tags: true
