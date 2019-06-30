@@ -24,3 +24,13 @@ deploy:
     on:
       repo: hmcts/ccd-case-migration-starter
       tags: true
+  - provider: script
+    script: ./gradlew bintrayUpload
+    skip_cleanup: true
+    on:
+      repo: hmcts/ccd-case-migration-starter
+      tags: true
+env:
+  global:
+    - secure: <change here>
+    - secure: <change here>
