@@ -24,3 +24,13 @@ deploy:
     on:
       repo: hmcts/ccd-case-migration-starter
       tags: true
+  - provider: script
+    script: ./gradlew bintrayUpload
+    skip_cleanup: true
+    on:
+      repo: hmcts/ccd-case-migration-starter
+      tags: true
+env:
+  global:
+    - secure: Cs6biG6EBr0wE7JdR9tl9t1Pv9adYQD1XKAkq3WVUmUg5KN3N6YmAuUQ8SYncbmmd7yh8aQT+7tVfvh3ceFutDFamjKybTdxFqWedysFnNkTeCB3p0mhY/ttMPhUUt1sswerdGSk/pves4ddVUyPbSGamXwatzWPkZmp/Ur2b27/m8CD4bLRhE/JPFDFcMKtoLeeNfYtMDpiq7VFtk6k/MjZUat6N1y06UtQiTEvCuv3s8vqgFL2xRZBxiBLfWiYdIj5J/GCzhztJq5+Ws2g7PQJ8rYhQ41J2oyPoPpzNqEoS/5NoVoRFPe4y8XS79Uggpo+p7qMnGuuQrh8eUltYuQDOCPFMQ1cNOUW4J/RYPb/zjuFN+7RmFRGp4Kbrbuhl2E4MA1PefDgcpnibiSI2ea1iJSQ5Xlv9CbBc5UIhS6jkX34DOreN0nA+lHThkaYqjb13sQ97jvfgH/5pQ+3GzO8et5fHiAQ+RtZf7BZ4FdvKZkQkt/qAeBRmqQZYwQup9OYo+tRIls0wveHTJ2yA3uCie+KJt3s6nu21tZMNEC5/iVHCJmMRQ1gi3dr5DTjHN1JlNYlr4KwTLcC9LfRaCqJQqUGUbS0u+pqfylSX4m3Lq8GKTh3Zm1j6+/QwmOmilzOGmXlAg2WoKNE6/aOkJly+3Wdm8zKjSYhgglBBuE=
+    - secure: dLWYlcdrRetPba0KjpS1wWX6rnRmWO9DuXjaZ2nLc+S//zgDqW4LnRpe+ECZlFW4oG+0wgfKVgEVQEn4TXconT/Asbyvbk5dkswF10n3h6OC93IrrdeXAfN4O4fhoV3WfnsCeaQl1sOHjxLj3ozroKqSs7VUdR/c1PScWsFfAv6jiIEdPVguHrXQc2YxjVA6Oa8ipBSGgMErnY37jgBSc/OufXN0T5LpkJ6pR2S1s6NA9pSJ6C3YEwi+srb7GxnR7gL21OmkzY5v6Oi/uKizRXxOLZqqX7QK3/nMY0+SfZlIGqax+Q7Ao7NjuOOlJsgoTajBJvQl36JQj7GQsmdULzJNhgoJkBfkobKU5M8N8bZEJNu2xyGFVtxgmq0+tT3ZlHO/DZMo04ye0/TD1WK+UZRsyFZ7AOu0RmOjdkUSShjRl2yQk4LhSv8ImG24vHsLrGaef70EDmODb5/tchwNYuIysEqljvQyVdP1vwY4PmJibs9Dj6Fb4TKcRv4Y4J9EhBzDw3YsY9Fu3bNXJowEdzqlvgG6gJhNiIbYFUNgV0MeRi/mzqDHG7LH5h/Dv/N0n/GHonSZzN4pHUP6Xsdw8ak9jAlCn7497Vfzy2ZVknvaQDqiOl7J2HOmgsJkDshSruIBbW23bq0YevCYocaU21FSNEfh++xDDgjAawAtWjE=
