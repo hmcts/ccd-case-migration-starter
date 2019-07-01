@@ -54,4 +54,20 @@ subprojects {
       }
     }
   }
+
+  bintray {
+    user = System.getenv('BINTRAY_USER')
+    key = System.getenv('BINTRAY_KEY')
+    publish = true
+    pkg {
+      repo = 'hmcts-maven'
+      name = 'ccd-case-migration-starter'
+      userOrg = 'hmcts'
+      licenses = ['MIT']
+      vcsUrl = 'https://github.com/hmcts/ccd-case-migration-starter'
+      version {
+        name = project.version
+      }
+    }
+  }
 }
