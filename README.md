@@ -24,13 +24,13 @@ Package offers base domain classes for standardised case data structures such as
 Assuming that you have Java project scaffolding please include framework artifact as a project dependency by adding following line:
 
 ```groovy
-compile group: 'uk.gov.hmcts.reform.ccd-case-migration', name: 'processor', version: '1.0.0'
+compile group: 'uk.gov.hmcts.reform.ccd-case-migration', name: 'processor', version: '1.1.0'
 ```
 
 If you want to take advantages of standard domain classes please also include domain artifact as a project dependency by adding following line:
 
 ```groovy
-compile group: 'uk.gov.hmcts.reform.ccd-case-migration', name: 'domain', version: '1.0.0'
+compile group: 'uk.gov.hmcts.reform.ccd-case-migration', name: 'domain', version: '1.1.0'
 ```
 
 Having done above please create class that implements `uk.gov.hmcts.reform.migration.service.DataMigrationService` interface in similar way as shown below:
