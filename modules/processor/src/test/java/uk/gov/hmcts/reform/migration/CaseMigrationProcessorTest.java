@@ -66,6 +66,7 @@ public class CaseMigrationProcessorTest {
     public void shouldProcessASingleCaseAndMigrationIsFailed() {
         when(coreCaseDataService.fetchOne(USER_TOKEN, CASE_ID)).thenReturn(caseDetails1);
         when(dataMigrationService.accepts()).thenReturn(candidate -> true);
+        when(dataMigrationService.migrate(caseDetails1.getData())).thenReturn(caseDetails1.getData());
         when(coreCaseDataService.update(USER_TOKEN, caseDetails1.getId().toString(), EVENT_ID, EVENT_SUMMARY, EVENT_DESCRIPTION, caseDetails1.getData())).thenThrow(new RuntimeException("Internal server error"));
         caseMigrationProcessor.processSingleCase(USER_TOKEN, CASE_ID);
         verify(coreCaseDataService, times(1)).fetchOne(USER_TOKEN, CASE_ID);
@@ -80,6 +81,9 @@ public class CaseMigrationProcessorTest {
         mockDataUpdate(caseDetails1);
         mockDataUpdate(caseDetails2);
         when(dataMigrationService.accepts()).thenReturn(candidate -> true);
+        when(dataMigrationService.migrate(caseDetails1.getData())).thenReturn(caseDetails1.getData());
+        when(dataMigrationService.migrate(caseDetails2.getData())).thenReturn(caseDetails2.getData());
+        when(dataMigrationService.migrate(caseDetails3.getData())).thenReturn(caseDetails3.getData());
         when(coreCaseDataService.update(USER_TOKEN, caseDetails3.getId().toString(), EVENT_ID, EVENT_SUMMARY, EVENT_DESCRIPTION, caseDetails3.getData())).thenThrow(new RuntimeException("Internal server error"));
         caseMigrationProcessor.processAllCases(USER_TOKEN, USER_ID);
         assertThat(caseMigrationProcessor.getFailedCases(), contains(1113L));
@@ -91,6 +95,9 @@ public class CaseMigrationProcessorTest {
         mockDataFetch(caseDetails1, caseDetails2, caseDetails3);
         mockDataUpdate(caseDetails1);
         when(dataMigrationService.accepts()).thenReturn(candidate -> true);
+        when(dataMigrationService.migrate(caseDetails1.getData())).thenReturn(caseDetails1.getData());
+        when(dataMigrationService.migrate(caseDetails2.getData())).thenReturn(caseDetails2.getData());
+        when(dataMigrationService.migrate(caseDetails3.getData())).thenReturn(caseDetails3.getData());
         when(coreCaseDataService.update(USER_TOKEN, caseDetails2.getId().toString(), EVENT_ID, EVENT_SUMMARY, EVENT_DESCRIPTION, caseDetails2.getData())).thenThrow(new RuntimeException("Internal server error"));
         when(coreCaseDataService.update(USER_TOKEN, caseDetails3.getId().toString(), EVENT_ID, EVENT_SUMMARY, EVENT_DESCRIPTION, caseDetails3.getData())).thenThrow(new RuntimeException("Internal server error"));
         caseMigrationProcessor.processAllCases(USER_TOKEN, USER_ID);

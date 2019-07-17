@@ -2,10 +2,11 @@ package uk.gov.hmcts.reform.migration.service;
 
 import uk.gov.hmcts.reform.ccd.client.model.CaseDetails;
 
+import java.util.Map;
 import java.util.function.Predicate;
 
-public interface DataMigrationService {
+public interface DataMigrationService<T> {
     Predicate<CaseDetails> accepts();
 
-    void migrate(CaseDetails caseDetails);
+    T migrate(Map<String, Object> data);
 }
