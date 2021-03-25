@@ -26,11 +26,6 @@ public class CaseMigrationRunner implements CommandLineRunner {
     private CaseMigrationProcessor caseMigrationProcessor;
 
     public static void main(String[] args) {
-        System.setProperty("http.proxyHost", "proxyout.reform.hmcts.net");
-        System.setProperty("http.proxyPort", "8080");
-        System.setProperty("https.proxyHost", "proxyout.reform.hmcts.net");
-        System.setProperty("https.proxyPort", "8080");
-
         SpringApplication.run(CaseMigrationRunner.class, args);
     }
 
