@@ -11,7 +11,7 @@ subprojects {
   apply plugin: 'com.jfrog.bintray'
 
   group = 'uk.gov.hmcts.reform.ccd-case-migration'
-  version = '3.0.0'
+  version = 'DEV-SNAPSHOT'
 
   sourceCompatibility = '11'
   targetCompatibility = '11'
@@ -26,12 +26,18 @@ subprojects {
 
   repositories {
     mavenLocal()
+    mavenCentral()
+
     jcenter()
+
+    // jitpack should be last resort
+    // see: https://github.com/jitpack/jitpack.io/issues/1939
+    maven { url 'https://jitpack.io' }
 
     maven { url "https://dl.bintray.com/hmcts/hmcts-maven" }
     maven { url "http://repo.maven.apache.org/maven2" }
   }
-  
+
   dependencyManagement {
     imports {
       mavenBom org.springframework.boot.gradle.plugin.SpringBootPlugin.BOM_COORDINATES
