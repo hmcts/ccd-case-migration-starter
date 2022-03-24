@@ -20,6 +20,12 @@ public class CaseMigrationRunner implements CommandLineRunner {
     private String idamPassword;
     @Value("${migration.caseId}")
     private String ccdCaseId;
+    @Value("${migration.startDate}")
+    private String startDate;
+    @Value("${migration.endDate}")
+    private String endDate;
+    @Value("${migration.dryrun}")
+    private boolean dryrun;
     @Autowired
     private IdamClient idamClient;
     @Autowired
@@ -39,10 +45,10 @@ public class CaseMigrationRunner implements CommandLineRunner {
 
             if (ccdCaseId != null && !ccdCaseId.isBlank()) {
                 log.info("Data migration of single case started");
-                caseMigrationProcessor.processSingleCase(userToken, ccdCaseId);
+                caseMigrationProcessor.processSingleCase(userToken, ccdCaseId, dryrun);
             } else {
-                log.info("Data migration of all cases started");
-                caseMigrationProcessor.processAllCases(userToken, userId);
+                log.info("Data migration of cases between {} and {} started", startDate, endDate);
+                caseMigrationProcessor.processAllCases(userToken, userId, startDate, endDate, dryrun);
             }
 
             log.info("-----------------------------------------");
