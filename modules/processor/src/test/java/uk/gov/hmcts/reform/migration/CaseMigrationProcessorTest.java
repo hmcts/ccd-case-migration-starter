@@ -1,5 +1,6 @@
 package uk.gov.hmcts.reform.migration;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
@@ -8,14 +9,18 @@ import org.mockito.junit.MockitoJUnitRunner;
 import uk.gov.hmcts.reform.ccd.client.model.CaseDetails;
 import uk.gov.hmcts.reform.migration.ccd.CoreCaseDataService;
 import uk.gov.hmcts.reform.migration.service.DataMigrationService;
-
+import java.time.LocalDate;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
-import static java.util.Arrays.asList;
+import static org.codehaus.groovy.runtime.InvokerHelper.asList;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.hasSize;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -46,7 +51,7 @@ public class CaseMigrationProcessorTest {
     public void shouldNotProcessASingleCaseWithOutRedundantFields() {
         when(coreCaseDataService.fetchOne(USER_TOKEN, CASE_ID)).thenReturn(caseDetails1);
         when(dataMigrationService.accepts()).thenReturn(candidate -> false);
-        caseMigrationProcessor.processSingleCase(USER_TOKEN, CASE_ID);
+        caseMigrationProcessor.processSingleCase(USER_TOKEN, CASE_ID, false);
         verify(coreCaseDataService, times(1)).fetchOne(USER_TOKEN, CASE_ID);
         assertThat(caseMigrationProcessor.getFailedCases(), hasSize(0));
         assertThat(caseMigrationProcessor.getMigratedCases(), hasSize(0));
@@ -56,7 +61,7 @@ public class CaseMigrationProcessorTest {
     public void shouldProcessASingleCaseAndMigrationIsSuccessful() {
         when(coreCaseDataService.fetchOne(USER_TOKEN, CASE_ID)).thenReturn(caseDetails1);
         when(dataMigrationService.accepts()).thenReturn(candidate -> true);
-        caseMigrationProcessor.processSingleCase(USER_TOKEN, CASE_ID);
+        caseMigrationProcessor.processSingleCase(USER_TOKEN, CASE_ID, false);
         verify(coreCaseDataService, times(1)).fetchOne(USER_TOKEN, CASE_ID);
         assertThat(caseMigrationProcessor.getFailedCases(), hasSize(0));
         assertThat(caseMigrationProcessor.getMigratedCases(), contains(1111L));
@@ -68,7 +73,7 @@ public class CaseMigrationProcessorTest {
         when(dataMigrationService.accepts()).thenReturn(candidate -> true);
         when(dataMigrationService.migrate(caseDetails1.getData())).thenReturn(caseDetails1.getData());
         when(coreCaseDataService.update(USER_TOKEN, caseDetails1.getId().toString(), EVENT_ID, EVENT_SUMMARY, EVENT_DESCRIPTION, caseDetails1.getData())).thenThrow(new RuntimeException("Internal server error"));
-        caseMigrationProcessor.processSingleCase(USER_TOKEN, CASE_ID);
+        caseMigrationProcessor.processSingleCase(USER_TOKEN, CASE_ID, false);
         verify(coreCaseDataService, times(1)).fetchOne(USER_TOKEN, CASE_ID);
         verify(coreCaseDataService, times(1)).update(USER_TOKEN, "1111", EVENT_ID, EVENT_SUMMARY, EVENT_DESCRIPTION, caseDetails1.getData());
         assertThat(caseMigrationProcessor.getFailedCases(), contains(1111L));
@@ -85,7 +90,7 @@ public class CaseMigrationProcessorTest {
         when(dataMigrationService.migrate(caseDetails2.getData())).thenReturn(caseDetails2.getData());
         when(dataMigrationService.migrate(caseDetails3.getData())).thenReturn(caseDetails3.getData());
         when(coreCaseDataService.update(USER_TOKEN, caseDetails3.getId().toString(), EVENT_ID, EVENT_SUMMARY, EVENT_DESCRIPTION, caseDetails3.getData())).thenThrow(new RuntimeException("Internal server error"));
-        caseMigrationProcessor.processAllCases(USER_TOKEN, USER_ID);
+        caseMigrationProcessor.processAllCases(USER_TOKEN, USER_ID, "2022-03-01", "2022-03-02", false);
         assertThat(caseMigrationProcessor.getFailedCases(), contains(1113L));
         assertThat(caseMigrationProcessor.getMigratedCases(), contains(1111L, 1112L));
     }
@@ -100,7 +105,7 @@ public class CaseMigrationProcessorTest {
         when(dataMigrationService.migrate(caseDetails3.getData())).thenReturn(caseDetails3.getData());
         when(coreCaseDataService.update(USER_TOKEN, caseDetails2.getId().toString(), EVENT_ID, EVENT_SUMMARY, EVENT_DESCRIPTION, caseDetails2.getData())).thenThrow(new RuntimeException("Internal server error"));
         when(coreCaseDataService.update(USER_TOKEN, caseDetails3.getId().toString(), EVENT_ID, EVENT_SUMMARY, EVENT_DESCRIPTION, caseDetails3.getData())).thenThrow(new RuntimeException("Internal server error"));
-        caseMigrationProcessor.processAllCases(USER_TOKEN, USER_ID);
+        caseMigrationProcessor.processAllCases(USER_TOKEN, USER_ID, "2022-03-01", "2022-03-02", false);
         assertThat(caseMigrationProcessor.getFailedCases(), contains(1112L, 1113L));
         assertThat(caseMigrationProcessor.getMigratedCases(), contains(1111L));
     }
@@ -110,13 +115,31 @@ public class CaseMigrationProcessorTest {
         mockDataFetch();
 
         when(dataMigrationService.accepts()).thenReturn(candidate -> true);
-        caseMigrationProcessor.processAllCases(USER_TOKEN, USER_ID);
+        caseMigrationProcessor.processAllCases(USER_TOKEN, USER_ID,"2022-03-01", "2022-03-30", false);
         assertThat(caseMigrationProcessor.getFailedCases(), hasSize(0));
         assertThat(caseMigrationProcessor.getFailedCases(), hasSize(0));
     }
 
+    @Test
+    public void testGetDates() {
+        String firstDate = "2021-01-01";
+        String lastDate = "2022-01-01";
+        List<LocalDate> listOfDates =  caseMigrationProcessor.getListOfDates(LocalDate.parse(firstDate),
+            LocalDate.parse(lastDate));
+        assertEquals(365, listOfDates.size());
+    }
+
+    @Test
+    public void testGetDatesLeapYear() {
+        String firstDate = "2020-01-01";
+        String lastDate = "2021-01-01";
+        List<LocalDate> listOfDates =  caseMigrationProcessor.getListOfDates(LocalDate.parse(firstDate),
+            LocalDate.parse(lastDate));
+        assertEquals(366, listOfDates.size());
+    }
+
     private void mockDataFetch(CaseDetails... caseDetails) {
-        when(coreCaseDataService.fetchAll(USER_TOKEN, USER_ID)).thenReturn(asList(caseDetails));
+        when(coreCaseDataService.fetchAllForDay(eq(USER_TOKEN), eq(USER_ID), anyString())).thenReturn(asList(caseDetails));
     }
 
     private void mockDataUpdate(CaseDetails caseDetails) {

@@ -8,9 +8,11 @@ import uk.gov.hmcts.reform.ccd.client.model.CaseDetails;
 import uk.gov.hmcts.reform.migration.service.DataMigrationService;
 import uk.gov.hmcts.reform.migration.ccd.CoreCaseDataService;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Component
@@ -28,7 +30,7 @@ public class CaseMigrationProcessor {
     @Getter
     private List<Long> failedCases = new ArrayList<>();
 
-    public void processSingleCase(String userToken, String caseId) {
+    public void processSingleCase(String userToken, String caseId, boolean dryrun) {
         CaseDetails caseDetails;
         try {
             caseDetails = coreCaseDataService.fetchOne(userToken, caseId);
@@ -37,26 +39,45 @@ public class CaseMigrationProcessor {
             return;
         }
         if (dataMigrationService.accepts().test(caseDetails)) {
-            updateCase(userToken, caseDetails.getId(), caseDetails.getData());
+            updateCase(userToken, caseDetails.getId(), caseDetails.getData(), dryrun);
         } else {
             log.info("Case {} already migrated", caseDetails.getId());
         }
     }
 
-    public void processAllCases(String userToken, String userId) {
-        coreCaseDataService.fetchAll(userToken, userId).stream()
-            .filter(dataMigrationService.accepts())
-            .forEach(caseDetails -> updateCase(userToken, caseDetails.getId(), caseDetails.getData()));
+    public void processAllCases(String userToken, String userId, String firstDate,
+                                String lastDate, boolean dryrun) {
+        CaseDetails oldestCaseDetails = coreCaseDataService.fetchOldestCase(userToken, userId);
+        if (oldestCaseDetails != null) {
+            log.info("The data of the oldest case is " + oldestCaseDetails.getCreatedDate());
+        }
+        if (firstDate != null && lastDate != null) {
+            List<LocalDate> dates = getListOfDates(LocalDate.parse(firstDate), LocalDate.parse(lastDate));
+            for (LocalDate localDate : dates) {
+                coreCaseDataService.fetchAllForDay(userToken, userId, localDate.toString()).stream()
+                    .filter(dataMigrationService.accepts())
+                    .forEach(caseDetails -> updateCase(userToken, caseDetails.getId(), caseDetails.getData(), dryrun));
+            }
+        }
     }
 
-    private void updateCase(String authorisation, Long id, Map<String, Object> data) {
+    protected List<LocalDate> getListOfDates(LocalDate startDate, LocalDate endDate) {
+            return startDate.datesUntil(endDate)
+                .collect(Collectors.toList());
+    }
+
+    private void updateCase(String authorisation, Long id, Map<String, Object> data, boolean dryrun) {
         log.info("Updating case {}", id);
         try {
-            log.debug("Case data: {}", data);
-            coreCaseDataService.update(authorisation, id.toString(),
-                EVENT_ID, EVENT_SUMMARY, EVENT_DESCRIPTION, dataMigrationService.migrate(data));
-            log.info("Case {} successfully updated", id);
-            migratedCases.add(id);
+            if (dryrun) {
+                //do nothing
+            } else {
+                log.debug("Case data: {}", data);
+                coreCaseDataService.update(authorisation, id.toString(),
+                    EVENT_ID, EVENT_SUMMARY, EVENT_DESCRIPTION, dataMigrationService.migrate(data));
+                log.info("Case {} successfully updated", id);
+                migratedCases.add(id);
+            }
         } catch (Exception e) {
             log.error("Case {} update failed due to: {}", id, e.getMessage());
             failedCases.add(id);
