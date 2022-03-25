@@ -70,7 +70,7 @@ public class CaseMigrationProcessor {
         log.info("Updating case {}", id);
         try {
             if (dryrun) {
-                log.info("Case {} not being updated, dryrun", id);
+                //do nothing
             } else {
                 log.debug("Case data: {}", data);
                 coreCaseDataService.update(authorisation, id.toString(),
