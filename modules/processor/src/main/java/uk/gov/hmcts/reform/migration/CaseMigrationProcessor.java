@@ -1,34 +1,38 @@
 package uk.gov.hmcts.reform.migration;
 
-import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
-import uk.gov.hmcts.reform.ccd.client.model.CaseDetails;
-import uk.gov.hmcts.reform.migration.service.DataMigrationService;
-import uk.gov.hmcts.reform.migration.ccd.CoreCaseDataService;
-
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
+import uk.gov.hmcts.reform.ccd.client.model.CaseDetails;
+import uk.gov.hmcts.reform.migration.ccd.CoreCaseDataService;
+import uk.gov.hmcts.reform.migration.service.DataMigrationService;
 
 @Slf4j
 @Component
+@RequiredArgsConstructor
 public class CaseMigrationProcessor {
+
     private static final String EVENT_ID = "migrateCase";
     private static final String EVENT_SUMMARY = "Migrate Case";
     private static final String EVENT_DESCRIPTION = "Migrate Case";
 
-    @Autowired
-    private CoreCaseDataService coreCaseDataService;
-    @Autowired
-    private DataMigrationService<?> dataMigrationService;
+    private final CoreCaseDataService coreCaseDataService;
+    private final DataMigrationService<?> dataMigrationService;
+
     @Getter
-    private List<Long> migratedCases = new ArrayList<>();
+    private final List<Long> migratedCases = new ArrayList<>();
     @Getter
-    private List<Long> failedCases = new ArrayList<>();
+    private final List<Long> failedCases = new ArrayList<>();
+
+    @Value("${migration.parallel:false}")
+    private boolean parallel;
 
     public void processSingleCase(String userToken, String caseId, boolean dryrun) {
         CaseDetails caseDetails;
@@ -45,18 +49,19 @@ public class CaseMigrationProcessor {
         }
     }
 
-    public void processAllCases(String userToken, String userId, String firstDate,
-                                String lastDate, boolean dryrun) {
-        CaseDetails oldestCaseDetails = coreCaseDataService.fetchOldestCase(userToken, userId);
+    public void processAllCases(String userToken, String firstDate, String lastDate, boolean dryrun) {
+        CaseDetails oldestCaseDetails = coreCaseDataService.fetchOldestCase(userToken);
         if (oldestCaseDetails != null) {
             log.info("The data of the oldest case is " + oldestCaseDetails.getCreatedDate());
         }
         if (firstDate != null && lastDate != null) {
-            List<LocalDate> dates = getListOfDates(LocalDate.parse(firstDate), LocalDate.parse(lastDate));
-            for (LocalDate localDate : dates) {
-                coreCaseDataService.fetchAllForDay(userToken, userId, localDate.toString()).stream()
-                    .filter(dataMigrationService.accepts())
-                    .forEach(caseDetails -> updateCase(userToken, caseDetails.getId(), caseDetails.getData(), dryrun));
+            List<LocalDate> listOfDates = getListOfDates(LocalDate.parse(firstDate), LocalDate.parse(lastDate));
+            if (parallel) {
+//                log.info("Executing in parallel.. please wait.");
+//                listOfDates.parallelStream().forEach(date -> migrateCases(date, userToken, dryrun));
+                migrateCasesParallel(listOfDates, userToken, dryrun);
+            } else {
+                listOfDates.forEach(date -> migrateCases(date, userToken, dryrun));
             }
         }
     }
@@ -66,18 +71,49 @@ public class CaseMigrationProcessor {
                 .collect(Collectors.toList());
     }
 
+    protected void migrateCasesParallel(List<LocalDate> dates, String userToken, boolean dryrun) {
+        log.info("Executing in parallel.. please wait.");
+        dates.parallelStream()
+            .forEach(date ->
+                coreCaseDataService.fetchAllForDay(userToken, date.toString())
+                    .stream()
+                    .filter(dataMigrationService.accepts())
+                    .parallel()
+                    .forEach(caseDetails -> updateCase(
+                        userToken,
+                        caseDetails.getId(),
+                        caseDetails.getData(),
+                        dryrun)
+                    )
+            );
+    }
+
+    protected void migrateCases(LocalDate date, String userToken, boolean dryrun) {
+        coreCaseDataService.fetchAllForDay(userToken, date.toString())
+            .stream()
+            .filter(dataMigrationService.accepts())
+            .forEach(caseDetails -> updateCase(
+                userToken,
+                caseDetails.getId(),
+                caseDetails.getData(),
+                dryrun)
+            );
+    }
+
     private void updateCase(String authorisation, Long id, Map<String, Object> data, boolean dryrun) {
         log.info("Updating case {}", id);
+
+        if (dryrun) {
+            return;
+        }
+
         try {
-            if (dryrun) {
-                //do nothing
-            } else {
-                log.debug("Case data: {}", data);
-                coreCaseDataService.update(authorisation, id.toString(),
-                    EVENT_ID, EVENT_SUMMARY, EVENT_DESCRIPTION, dataMigrationService.migrate(data));
-                log.info("Case {} successfully updated", id);
-                migratedCases.add(id);
-            }
+            log.debug("Case data: {}", data);
+            var migratedData = dataMigrationService.migrate(data);
+            coreCaseDataService.update(authorisation, id.toString(),
+                EVENT_ID, EVENT_SUMMARY, EVENT_DESCRIPTION, migratedData);
+            log.info("Case {} successfully updated", id);
+            migratedCases.add(id);
         } catch (Exception e) {
             log.error("Case {} update failed due to: {}", id, e.getMessage());
             failedCases.add(id);

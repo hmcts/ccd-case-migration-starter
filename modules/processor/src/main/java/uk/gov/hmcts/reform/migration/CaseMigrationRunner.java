@@ -1,17 +1,18 @@
 package uk.gov.hmcts.reform.migration;
 
+import java.util.concurrent.TimeUnit;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.apache.commons.lang3.time.StopWatch;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.context.annotation.PropertySource;
 import uk.gov.hmcts.reform.idam.client.IdamClient;
 
 @Slf4j
 @SpringBootApplication
-@PropertySource("classpath:application.properties")
+@RequiredArgsConstructor
 public class CaseMigrationRunner implements CommandLineRunner {
 
     @Value("${migration.idam.username}")
@@ -26,10 +27,9 @@ public class CaseMigrationRunner implements CommandLineRunner {
     private String endDate;
     @Value("${migration.dryrun}")
     private boolean dryrun;
-    @Autowired
-    private IdamClient idamClient;
-    @Autowired
-    private CaseMigrationProcessor caseMigrationProcessor;
+
+    private final IdamClient idamClient;
+    private final CaseMigrationProcessor caseMigrationProcessor;
 
     public static void main(String[] args) {
         SpringApplication.run(CaseMigrationRunner.class, args);
@@ -43,16 +43,20 @@ public class CaseMigrationRunner implements CommandLineRunner {
             String userId = idamClient.getUserDetails(userToken).getId();
             log.debug("User ID: {}", userId);
 
+            StopWatch stopWatch = StopWatch.createStarted();
+
             if (ccdCaseId != null && !ccdCaseId.isBlank()) {
                 log.info("Data migration of single case started");
                 caseMigrationProcessor.processSingleCase(userToken, ccdCaseId, dryrun);
             } else {
                 log.info("Data migration of cases between {} and {} started", startDate, endDate);
-                caseMigrationProcessor.processAllCases(userToken, userId, startDate, endDate, dryrun);
+                caseMigrationProcessor.processAllCases(userToken, startDate, endDate, dryrun);
             }
 
+            stopWatch.stop();
+
             log.info("-----------------------------------------");
-            log.info("Data migration completed");
+            log.info("Data migration completed in: {} minutes.", stopWatch.getTime(TimeUnit.MINUTES));
             log.info("-----------------------------------------");
             log.info("Total number of processed cases: {}", caseMigrationProcessor.getMigratedCases().size() + caseMigrationProcessor.getFailedCases().size());
             log.info("Total number of migrations performed: {}", caseMigrationProcessor.getMigratedCases().size());
