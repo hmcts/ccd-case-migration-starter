@@ -82,10 +82,6 @@ public class CaseMigrationProcessor {
     }
 
     protected List<LocalDate> getListOfDates(LocalDate startDate, LocalDate endDate) {
-        if (startDate.isEqual(endDate)) {
-            return singletonList(startDate);
-        }
-
         return startDate
             .datesUntil(endDate)
             .collect(Collectors.toList());
@@ -94,6 +90,7 @@ public class CaseMigrationProcessor {
     private void updateCase(String authorisation, Long id, Map<String, Object> data, boolean dryrun) {
 
         if (dryrun) {
+            log.info("Updating case: {}", id);
             return;
         }
 
