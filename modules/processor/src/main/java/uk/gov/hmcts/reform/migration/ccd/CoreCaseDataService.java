@@ -115,10 +115,12 @@ public class CoreCaseDataService {
                 authorisation,
                 authTokenGenerator.generate(),
                 "Benefit",
-                searchBuilder.toString()).getCases();
+                searchBuilder.toString())
+                .getCases();
 
         } catch (FeignException fe) {
-            log.error("Feign Exception message: {}", fe.getMessage());
+            log.error("Feign Exception message: {} with search string: {}",
+                fe.contentUTF8(), searchBuilder);
         }
 
         return caseDetails;
