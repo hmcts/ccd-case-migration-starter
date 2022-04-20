@@ -1,31 +1,34 @@
 package uk.gov.hmcts.reform.migration.ccd;
 
-import lombok.extern.slf4j.Slf4j;
-import org.elasticsearch.index.query.QueryBuilders;
-import org.elasticsearch.search.builder.SearchSourceBuilder;
-import org.elasticsearch.search.sort.SortOrder;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
-import uk.gov.hmcts.reform.authorisation.generators.AuthTokenGenerator;
-import uk.gov.hmcts.reform.ccd.client.CoreCaseDataApi;
-import uk.gov.hmcts.reform.ccd.client.model.*;
-import uk.gov.hmcts.reform.migration.auth.AuthUtil;
-import uk.gov.hmcts.reform.idam.client.IdamClient;
-import uk.gov.hmcts.reform.idam.client.models.UserDetails;
+import static org.elasticsearch.index.query.QueryBuilders.matchQuery;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
-
-import static org.elasticsearch.index.query.QueryBuilders.matchQuery;
-
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.search.builder.SearchSourceBuilder;
+import org.elasticsearch.search.sort.SortOrder;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+import uk.gov.hmcts.reform.authorisation.generators.AuthTokenGenerator;
+import uk.gov.hmcts.reform.ccd.client.CoreCaseDataApi;
+import uk.gov.hmcts.reform.ccd.client.model.CaseDataContent;
+import uk.gov.hmcts.reform.ccd.client.model.CaseDetails;
+import uk.gov.hmcts.reform.ccd.client.model.Event;
+import uk.gov.hmcts.reform.ccd.client.model.PaginatedSearchMetadata;
+import uk.gov.hmcts.reform.ccd.client.model.SearchResult;
+import uk.gov.hmcts.reform.ccd.client.model.StartEventResponse;
+import uk.gov.hmcts.reform.idam.client.IdamClient;
+import uk.gov.hmcts.reform.idam.client.models.UserDetails;
+import uk.gov.hmcts.reform.migration.auth.AuthUtil;
 
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class CoreCaseDataService {
 
     @Value("${migration.jurisdiction}")
@@ -33,12 +36,9 @@ public class CoreCaseDataService {
     @Value("${migration.caseType}")
     private String caseType;
 
-    @Autowired
-    private IdamClient idamClient;
-    @Autowired
-    private AuthTokenGenerator authTokenGenerator;
-    @Autowired
-    private CoreCaseDataApi coreCaseDataApi;
+    private final IdamClient idamClient;
+    private final AuthTokenGenerator authTokenGenerator;
+    private final CoreCaseDataApi coreCaseDataApi;
 
     int pagesize = 50;
 
@@ -53,7 +53,7 @@ public class CoreCaseDataService {
             .collect(Collectors.toList());
     }
 
-    public List<CaseDetails> fetchAllForDay(String authorisation, String userId, String day) {
+    public List<CaseDetails> fetchAllForDay(String authorisation, String day) {
         SearchSourceBuilder searchBuilder = new SearchSourceBuilder();
         searchBuilder.size(1);
         searchBuilder.query(QueryBuilders.boolQuery().must(matchQuery(
@@ -65,10 +65,9 @@ public class CoreCaseDataService {
         searchBuilder.from(pagesize);
         int numberOfPages = total/pagesize;
 
-        List<CaseDetails> caseDetails = IntStream.rangeClosed(0, numberOfPages).boxed()
-            .flatMap(pageNumber -> fetchPageEs(authorisation, userId, pageNumber, day).stream())
+        return IntStream.rangeClosed(0, numberOfPages).boxed()
+            .flatMap(pageNumber -> fetchPageEs(authorisation, pageNumber, day).stream())
             .collect(Collectors.toList());
-        return caseDetails;
     }
 
     private int getNumberOfPages(String authorisation, String userId, Map<String, String> searchCriteria) {
@@ -84,18 +83,21 @@ public class CoreCaseDataService {
             caseType, searchCriteria);
     }
 
-    private List<CaseDetails> fetchPageEs(String authorisation, String userId, int pageNumber, String day) {
+    private List<CaseDetails> fetchPageEs(String authorisation, int pageNumber, String day) {
         SearchSourceBuilder searchBuilder = new SearchSourceBuilder();
         searchBuilder.size(pagesize);
         searchBuilder.from(pageNumber * pagesize);
         searchBuilder.query(QueryBuilders.boolQuery().must(matchQuery(
             "created_date", day)));
 
-        List<CaseDetails> caseDetails = coreCaseDataApi.searchCases(authorisation, authTokenGenerator.generate(), "Benefit", searchBuilder.toString()).getCases();
-        return caseDetails;
+        return coreCaseDataApi.searchCases(
+            authorisation,
+            authTokenGenerator.generate(),
+            "Benefit",
+            searchBuilder.toString()).getCases();
     }
 
-    public CaseDetails fetchOldestCase(String authorisation, String userId) {
+    public CaseDetails fetchOldestCase(String authorisation) {
         SearchSourceBuilder searchBuilder = new SearchSourceBuilder();
         searchBuilder.size(pagesize);
         searchBuilder.sort("created_date", SortOrder.ASC);
