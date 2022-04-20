@@ -1,7 +1,9 @@
 package uk.gov.hmcts.reform.migration.ccd;
 
+import static java.util.Collections.emptyList;
 import static org.elasticsearch.index.query.QueryBuilders.matchQuery;
 
+import feign.FeignException;
 import java.time.LocalDate;
 import java.util.Collection;
 import java.util.HashMap;
@@ -106,11 +108,20 @@ public class CoreCaseDataService {
         searchBuilder.query(QueryBuilders.boolQuery().must(matchQuery(
             "created_date", day)));
 
-        return coreCaseDataApi.searchCases(
-            authorisation,
-            authTokenGenerator.generate(),
-            "Benefit",
-            searchBuilder.toString()).getCases();
+        List<CaseDetails> caseDetails = emptyList();
+
+        try {
+            caseDetails = coreCaseDataApi.searchCases(
+                authorisation,
+                authTokenGenerator.generate(),
+                "Benefit",
+                searchBuilder.toString()).getCases();
+
+        } catch (FeignException fe) {
+            log.error("Feign Exception message: {}", fe.getMessage());
+        }
+
+        return caseDetails;
     }
 
     public CaseDetails fetchOldestCase(String authorisation) {
