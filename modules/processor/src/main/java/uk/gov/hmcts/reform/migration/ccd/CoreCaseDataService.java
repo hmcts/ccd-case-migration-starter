@@ -1,12 +1,17 @@
 package uk.gov.hmcts.reform.migration.ccd;
 
+import static java.util.Collections.emptyList;
 import static org.elasticsearch.index.query.QueryBuilders.matchQuery;
 
+import feign.FeignException;
+import java.time.LocalDate;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.elasticsearch.index.query.QueryBuilders;
@@ -53,6 +58,19 @@ public class CoreCaseDataService {
             .collect(Collectors.toList());
     }
 
+    public List<CaseDetails> fetchAllBetweenDates(String authorisation,
+                                                  List<LocalDate> listOfDates,
+                                                  boolean parallel) {
+        Stream<LocalDate> processingStream = parallel
+            ? listOfDates.parallelStream()
+            : listOfDates.stream();
+
+        return processingStream
+            .map(date -> this.fetchAllForDay(authorisation, date.toString()))
+            .flatMap(Collection::stream)
+            .collect(Collectors.toList());
+    }
+
     public List<CaseDetails> fetchAllForDay(String authorisation, String day) {
         SearchSourceBuilder searchBuilder = new SearchSourceBuilder();
         searchBuilder.size(1);
@@ -90,11 +108,22 @@ public class CoreCaseDataService {
         searchBuilder.query(QueryBuilders.boolQuery().must(matchQuery(
             "created_date", day)));
 
-        return coreCaseDataApi.searchCases(
-            authorisation,
-            authTokenGenerator.generate(),
-            "Benefit",
-            searchBuilder.toString()).getCases();
+        List<CaseDetails> caseDetails = emptyList();
+
+        try {
+            caseDetails = coreCaseDataApi.searchCases(
+                authorisation,
+                authTokenGenerator.generate(),
+                "Benefit",
+                searchBuilder.toString())
+                .getCases();
+
+        } catch (FeignException fe) {
+            log.error("Feign Exception message: {} with search string: {}",
+                fe.contentUTF8(), searchBuilder);
+        }
+
+        return caseDetails;
     }
 
     public CaseDetails fetchOldestCase(String authorisation) {
