@@ -1,5 +1,7 @@
 package uk.gov.hmcts.reform.migration;
 
+import static java.util.Collections.singletonList;
+
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -67,8 +69,13 @@ public class CaseMigrationProcessor {
     }
 
     protected List<LocalDate> getListOfDates(LocalDate startDate, LocalDate endDate) {
-            return startDate.datesUntil(endDate)
-                .collect(Collectors.toList());
+        if (startDate.isEqual(endDate)) {
+            return singletonList(startDate);
+        }
+
+        return startDate
+            .datesUntil(endDate)
+            .collect(Collectors.toList());
     }
 
     protected void migrateCasesParallel(List<LocalDate> dates, String userToken, boolean dryrun) {
