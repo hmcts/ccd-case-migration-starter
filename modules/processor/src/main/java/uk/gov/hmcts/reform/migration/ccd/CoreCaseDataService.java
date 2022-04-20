@@ -2,11 +2,14 @@ package uk.gov.hmcts.reform.migration.ccd;
 
 import static org.elasticsearch.index.query.QueryBuilders.matchQuery;
 
+import java.time.LocalDate;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.elasticsearch.index.query.QueryBuilders;
@@ -50,6 +53,19 @@ public class CoreCaseDataService {
         int numberOfPages = getNumberOfPages(authorisation, userId, new HashMap<>());
         return IntStream.rangeClosed(1, numberOfPages).boxed()
             .flatMap(pageNumber -> fetchPage(authorisation, userId, pageNumber).stream())
+            .collect(Collectors.toList());
+    }
+
+    public List<CaseDetails> fetchAllBetweenDates(String authorisation,
+                                                  List<LocalDate> listOfDates,
+                                                  boolean parallel) {
+        Stream<LocalDate> processingStream = parallel
+            ? listOfDates.parallelStream()
+            : listOfDates.stream();
+
+        return processingStream
+            .map(date -> this.fetchAllForDay(authorisation, date.toString()))
+            .flatMap(Collection::stream)
             .collect(Collectors.toList());
     }
 

@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -56,15 +57,27 @@ public class CaseMigrationProcessor {
         if (oldestCaseDetails != null) {
             log.info("The data of the oldest case is " + oldestCaseDetails.getCreatedDate());
         }
+
         if (firstDate != null && lastDate != null) {
             List<LocalDate> listOfDates = getListOfDates(LocalDate.parse(firstDate), LocalDate.parse(lastDate));
+
+            Stream<CaseDetails> caseDetailsStream =
+                coreCaseDataService.fetchAllBetweenDates(userToken, listOfDates, parallel)
+                    .stream()
+                    .filter(dataMigrationService.accepts());
+
             if (parallel) {
-//                log.info("Executing in parallel.. please wait.");
-//                listOfDates.parallelStream().forEach(date -> migrateCases(date, userToken, dryrun));
-                migrateCasesParallel(listOfDates, userToken, dryrun);
-            } else {
-                listOfDates.forEach(date -> migrateCases(date, userToken, dryrun));
+                log.info("Executing in parallel.. please wait.");
+                caseDetailsStream = caseDetailsStream.parallel();
             }
+
+            caseDetailsStream
+                .forEach(caseDetail -> updateCase(
+                    userToken,
+                    caseDetail.getId(),
+                    caseDetail.getData(),
+                    dryrun)
+                );
         }
     }
 
@@ -78,37 +91,7 @@ public class CaseMigrationProcessor {
             .collect(Collectors.toList());
     }
 
-    protected void migrateCasesParallel(List<LocalDate> dates, String userToken, boolean dryrun) {
-        log.info("Executing in parallel.. please wait.");
-        dates.parallelStream()
-            .forEach(date ->
-                coreCaseDataService.fetchAllForDay(userToken, date.toString())
-                    .stream()
-                    .filter(dataMigrationService.accepts())
-                    .parallel()
-                    .forEach(caseDetails -> updateCase(
-                        userToken,
-                        caseDetails.getId(),
-                        caseDetails.getData(),
-                        dryrun)
-                    )
-            );
-    }
-
-    protected void migrateCases(LocalDate date, String userToken, boolean dryrun) {
-        coreCaseDataService.fetchAllForDay(userToken, date.toString())
-            .stream()
-            .filter(dataMigrationService.accepts())
-            .forEach(caseDetails -> updateCase(
-                userToken,
-                caseDetails.getId(),
-                caseDetails.getData(),
-                dryrun)
-            );
-    }
-
     private void updateCase(String authorisation, Long id, Map<String, Object> data, boolean dryrun) {
-        log.info("Updating case {}", id);
 
         if (dryrun) {
             return;
@@ -117,10 +100,17 @@ public class CaseMigrationProcessor {
         try {
             log.debug("Case data: {}", data);
             var migratedData = dataMigrationService.migrate(data);
-            coreCaseDataService.update(authorisation, id.toString(),
-                EVENT_ID, EVENT_SUMMARY, EVENT_DESCRIPTION, migratedData);
+            coreCaseDataService.update(
+                authorisation,
+                id.toString(),
+                EVENT_ID,
+                EVENT_SUMMARY,
+                EVENT_DESCRIPTION,
+                migratedData);
+
             log.info("Case {} successfully updated", id);
             migratedCases.add(id);
+
         } catch (Exception e) {
             log.error("Case {} update failed due to: {}", id, e.getMessage());
             failedCases.add(id);
