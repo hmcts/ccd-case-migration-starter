@@ -1,21 +1,8 @@
 package uk.gov.hmcts.reform.migration;
 
-import org.junit.Ignore;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
-import uk.gov.hmcts.reform.ccd.client.model.CaseDetails;
-import uk.gov.hmcts.reform.migration.ccd.CoreCaseDataService;
-import uk.gov.hmcts.reform.migration.service.DataMigrationService;
-import java.time.LocalDate;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import static org.codehaus.groovy.runtime.InvokerHelper.asList;
 import static org.hamcrest.Matchers.contains;
+import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.hasSize;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
@@ -24,6 +11,19 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+
+import java.time.LocalDate;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.MockitoJUnitRunner;
+import uk.gov.hmcts.reform.ccd.client.model.CaseDetails;
+import uk.gov.hmcts.reform.migration.ccd.CoreCaseDataService;
+import uk.gov.hmcts.reform.migration.service.DataMigrationService;
 
 
 @RunWith(MockitoJUnitRunner.class)
@@ -90,9 +90,9 @@ public class CaseMigrationProcessorTest {
         when(dataMigrationService.migrate(caseDetails2.getData())).thenReturn(caseDetails2.getData());
         when(dataMigrationService.migrate(caseDetails3.getData())).thenReturn(caseDetails3.getData());
         when(coreCaseDataService.update(USER_TOKEN, caseDetails3.getId().toString(), EVENT_ID, EVENT_SUMMARY, EVENT_DESCRIPTION, caseDetails3.getData())).thenThrow(new RuntimeException("Internal server error"));
-        caseMigrationProcessor.processAllCases(USER_TOKEN, USER_ID, "2022-03-01", "2022-03-02", false);
+        caseMigrationProcessor.processAllCases(USER_TOKEN, "2022-03-01", "2022-03-02", false);
         assertThat(caseMigrationProcessor.getFailedCases(), contains(1113L));
-        assertThat(caseMigrationProcessor.getMigratedCases(), contains(1111L, 1112L));
+        assertThat(caseMigrationProcessor.getMigratedCases(), containsInAnyOrder(1111L, 1112L));
     }
 
     @Test
@@ -105,8 +105,8 @@ public class CaseMigrationProcessorTest {
         when(dataMigrationService.migrate(caseDetails3.getData())).thenReturn(caseDetails3.getData());
         when(coreCaseDataService.update(USER_TOKEN, caseDetails2.getId().toString(), EVENT_ID, EVENT_SUMMARY, EVENT_DESCRIPTION, caseDetails2.getData())).thenThrow(new RuntimeException("Internal server error"));
         when(coreCaseDataService.update(USER_TOKEN, caseDetails3.getId().toString(), EVENT_ID, EVENT_SUMMARY, EVENT_DESCRIPTION, caseDetails3.getData())).thenThrow(new RuntimeException("Internal server error"));
-        caseMigrationProcessor.processAllCases(USER_TOKEN, USER_ID, "2022-03-01", "2022-03-02", false);
-        assertThat(caseMigrationProcessor.getFailedCases(), contains(1112L, 1113L));
+        caseMigrationProcessor.processAllCases(USER_TOKEN, "2022-03-01", "2022-03-02", false);
+        assertThat(caseMigrationProcessor.getFailedCases(), containsInAnyOrder(1112L, 1113L));
         assertThat(caseMigrationProcessor.getMigratedCases(), contains(1111L));
     }
 
@@ -115,7 +115,7 @@ public class CaseMigrationProcessorTest {
         mockDataFetch();
 
         when(dataMigrationService.accepts()).thenReturn(candidate -> true);
-        caseMigrationProcessor.processAllCases(USER_TOKEN, USER_ID,"2022-03-01", "2022-03-30", false);
+        caseMigrationProcessor.processAllCases(USER_TOKEN,"2022-03-01", "2022-03-30", false);
         assertThat(caseMigrationProcessor.getFailedCases(), hasSize(0));
         assertThat(caseMigrationProcessor.getFailedCases(), hasSize(0));
     }
@@ -139,7 +139,7 @@ public class CaseMigrationProcessorTest {
     }
 
     private void mockDataFetch(CaseDetails... caseDetails) {
-        when(coreCaseDataService.fetchAllForDay(eq(USER_TOKEN), eq(USER_ID), anyString())).thenReturn(asList(caseDetails));
+        when(coreCaseDataService.fetchAllForDay(eq(USER_TOKEN), anyString())).thenReturn(asList(caseDetails));
     }
 
     private void mockDataUpdate(CaseDetails caseDetails) {
