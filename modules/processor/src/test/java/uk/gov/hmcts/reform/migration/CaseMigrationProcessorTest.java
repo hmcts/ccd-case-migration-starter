@@ -122,12 +122,24 @@ public class CaseMigrationProcessorTest {
 
     @Test
     public void shouldContainSingleDate() {
-        String date = "2021-01-01";
+        String firstDate = "2021-01-01";
+        String lastDate = "2021-01-02";
 
-        List<LocalDate> listOfDates = caseMigrationProcessor.getListOfDates(LocalDate.parse(date),
-            LocalDate.parse(date));
+        List<LocalDate> listOfDates = caseMigrationProcessor.getListOfDates(LocalDate.parse(firstDate),
+            LocalDate.parse(lastDate));
 
         assertEquals(1, listOfDates.size());
+    }
+
+    @Test
+    public void shouldContainTwoDates() {
+        String firstDate = "2021-01-01";
+        String lastDate = "2021-01-03";
+
+        List<LocalDate> listOfDates = caseMigrationProcessor.getListOfDates(LocalDate.parse(firstDate),
+            LocalDate.parse(lastDate));
+
+        assertEquals(2, listOfDates.size());
     }
 
     @Test
