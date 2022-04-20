@@ -56,13 +56,14 @@ public class CaseMigrationRunner implements CommandLineRunner {
             stopWatch.stop();
 
             log.info("-----------------------------------------");
-            log.info("Data migration completed in: {} minutes.", stopWatch.getTime(TimeUnit.MINUTES));
-            log.info("-----------------------------------------");
             log.info("Total number of processed cases: {}", caseMigrationProcessor.getMigratedCases().size() + caseMigrationProcessor.getFailedCases().size());
             log.info("Total number of migrations performed: {}", caseMigrationProcessor.getMigratedCases().size());
             log.info("-----------------------------------------");
             log.info("Migrated cases: {} ", !caseMigrationProcessor.getMigratedCases().isEmpty() ? caseMigrationProcessor.getMigratedCases() : "NONE");
             log.info("Failed cases: {}", !caseMigrationProcessor.getFailedCases().isEmpty() ? caseMigrationProcessor.getFailedCases() : "NONE");
+            log.info("-----------------------------------------");
+            log.info("Data migration completed in: {} minutes.", stopWatch.getTime(TimeUnit.MINUTES));
+            log.info("-----------------------------------------");
         } catch (Throwable e) {
             log.error("Migration failed with the following reason: {}", e.getMessage(), e);
         }

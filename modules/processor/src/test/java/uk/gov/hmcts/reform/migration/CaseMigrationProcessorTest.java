@@ -121,20 +121,34 @@ public class CaseMigrationProcessorTest {
     }
 
     @Test
-    public void testGetDates() {
+    public void shouldContainSingleDate() {
+        String date = "2021-01-01";
+
+        List<LocalDate> listOfDates = caseMigrationProcessor.getListOfDates(LocalDate.parse(date),
+            LocalDate.parse(date));
+
+        assertEquals(1, listOfDates.size());
+    }
+
+    @Test
+    public void shouldContainNormalYearOfDates() {
         String firstDate = "2021-01-01";
         String lastDate = "2022-01-01";
-        List<LocalDate> listOfDates =  caseMigrationProcessor.getListOfDates(LocalDate.parse(firstDate),
+
+        List<LocalDate> listOfDates = caseMigrationProcessor.getListOfDates(LocalDate.parse(firstDate),
             LocalDate.parse(lastDate));
+
         assertEquals(365, listOfDates.size());
     }
 
     @Test
-    public void testGetDatesLeapYear() {
+    public void shouldContainLeapYearOfDates() {
         String firstDate = "2020-01-01";
         String lastDate = "2021-01-01";
-        List<LocalDate> listOfDates =  caseMigrationProcessor.getListOfDates(LocalDate.parse(firstDate),
+
+        List<LocalDate> listOfDates = caseMigrationProcessor.getListOfDates(LocalDate.parse(firstDate),
             LocalDate.parse(lastDate));
+
         assertEquals(366, listOfDates.size());
     }
 
