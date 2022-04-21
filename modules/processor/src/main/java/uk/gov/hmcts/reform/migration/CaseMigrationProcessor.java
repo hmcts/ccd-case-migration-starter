@@ -93,11 +93,11 @@ public class CaseMigrationProcessor {
 
     private void updateCase(String authorisation, Long id, Map<String, Object> data, boolean dryrun) {
 
+        totalCases++;
+
         if (dryrun) {
             return;
         }
-
-        totalCases++;
 
         try {
             log.debug("Case data: {}", data);
