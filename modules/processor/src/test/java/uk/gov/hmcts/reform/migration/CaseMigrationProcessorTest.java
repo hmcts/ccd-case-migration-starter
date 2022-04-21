@@ -30,7 +30,6 @@ import uk.gov.hmcts.reform.migration.service.DataMigrationService;
 public class CaseMigrationProcessorTest {
 
     private static final String USER_TOKEN = "Bearer eeeejjjttt";
-    private static final String USER_ID = "30";
     private static final String CASE_ID = "11111";
     private static final String EVENT_ID = "migrateCase";
     private static final String EVENT_SUMMARY = "Migrate Case";
@@ -40,12 +39,14 @@ public class CaseMigrationProcessorTest {
     private final CaseDetails caseDetails2 = createCaseDetails(1112L, "case-2");
     private final CaseDetails caseDetails3 = createCaseDetails(1113L, "case-3");
 
-    @InjectMocks
-    private CaseMigrationProcessor caseMigrationProcessor;
     @Mock
     private CoreCaseDataService coreCaseDataService;
+
     @Mock
     private DataMigrationService dataMigrationService;
+
+    @InjectMocks
+    private CaseMigrationProcessor caseMigrationProcessor;
 
     @Test
     public void shouldNotProcessASingleCaseWithOutRedundantFields() {
@@ -165,7 +166,7 @@ public class CaseMigrationProcessorTest {
     }
 
     private void mockDataFetch(CaseDetails... caseDetails) {
-        when(coreCaseDataService.fetchAllForDay(eq(USER_TOKEN), anyString())).thenReturn(asList(caseDetails));
+        when(coreCaseDataService.fetchAllForDay(eq(USER_TOKEN), anyString(), false)).thenReturn(asList(caseDetails));
     }
 
     private void mockDataUpdate(CaseDetails caseDetails) {
