@@ -36,18 +36,17 @@ public class CoreCaseDataServiceTest {
     private static final String EVENT_SUMMARY = "Migrate Case";
     private static final String EVENT_DESC = "Migrate Case";
 
-    @InjectMocks
-    private CoreCaseDataService underTest;
-
-    @Mock
-    CoreCaseDataApi coreCaseDataApi;
-
     @Mock
     private IdamClient idamClient;
 
     @Mock
     private AuthTokenGenerator authTokenGenerator;
 
+    @Mock
+    private CoreCaseDataApi coreCaseDataApi;
+
+    @InjectMocks
+    private CoreCaseDataService underTest;
 
     @Before
     public void setUp() {
