@@ -6,6 +6,7 @@ import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
+import org.springframework.util.ReflectionUtils;
 import uk.gov.hmcts.reform.authorisation.generators.AuthTokenGenerator;
 import uk.gov.hmcts.reform.ccd.client.CoreCaseDataApi;
 import uk.gov.hmcts.reform.ccd.client.model.CaseDataContent;
@@ -14,10 +15,9 @@ import uk.gov.hmcts.reform.ccd.client.model.Event;
 import uk.gov.hmcts.reform.ccd.client.model.StartEventResponse;
 import uk.gov.hmcts.reform.idam.client.IdamClient;
 import uk.gov.hmcts.reform.idam.client.models.UserDetails;
-import uk.gov.hmcts.reform.migration.service.DataMigrationService;
 
+import java.lang.reflect.Field;
 import java.util.LinkedHashMap;
-import java.util.Map;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
@@ -29,17 +29,12 @@ public class CoreCaseDataServiceTest {
     private static final String EVENT_ID = "migrateCase";
     private static final String CASE_TYPE = "CARE_SUPERVISION_EPO";
     private static final String CASE_ID = "123456789";
+    private static final String JURISDICTION_ID = "PUBLICLAW";
     private static final String USER_ID = "30";
     private static final String AUTH_TOKEN = "Bearer eyJhbGciOiJIUzI1NiJ9.eyJqdGkiOiJubGJoN";
     private static final String EVENT_TOKEN = "Bearer aaaadsadsasawewewewew";
     private static final String EVENT_SUMMARY = "Migrate Case";
     private static final String EVENT_DESC = "Migrate Case";
-
-    @InjectMocks
-    private CoreCaseDataService underTest;
-
-    @Mock
-    CoreCaseDataApi coreCaseDataApi;
 
     @Mock
     private IdamClient idamClient;
@@ -48,16 +43,33 @@ public class CoreCaseDataServiceTest {
     private AuthTokenGenerator authTokenGenerator;
 
     @Mock
-    private DataMigrationService<Map<String, Object>> dataMigrationService;
+    private CoreCaseDataApi coreCaseDataApi;
 
+    @InjectMocks
+    private CoreCaseDataService underTest;
 
     @Before
     public void setUp() {
+        Field field = ReflectionUtils.findField(CoreCaseDataService.class, "jurisdiction");
+        ReflectionUtils.makeAccessible(field);
+        ReflectionUtils.setField(field, underTest, JURISDICTION_ID);
+
+        Field caseTypeField = ReflectionUtils.findField(CoreCaseDataService.class, "caseType");
+        ReflectionUtils.makeAccessible(caseTypeField);
+        ReflectionUtils.setField(caseTypeField, underTest, CASE_TYPE);
     }
 
     @Test
     public void shouldUpdateTheCase() {
         // given
+        LinkedHashMap<String, Object> data = new LinkedHashMap<>();
+        data.put("solicitorEmail", "Padmaja.Ramisetti@hmcts.net");
+        data.put("solicitorName", "PADMAJA");
+        data.put("solicitorReference", "LL02");
+        data.put("applicantLName", "Mamidi");
+        data.put("applicantFMName", "Prashanth");
+        data.put("appRespondentFMName", "TestRespondant");
+
         UserDetails userDetails = UserDetails.builder()
             .id("30")
             .email("test@test.com")
@@ -65,12 +77,11 @@ public class CoreCaseDataServiceTest {
             .surname("Surname")
             .build();
 
-        CaseDetails caseDetails3 = createCaseDetails(CASE_ID, "case-3");
-        setupMocks(userDetails, caseDetails3.getData());
+        setupMocks(userDetails, data);
 
         //when
-        CaseDetails update = underTest.update(AUTH_TOKEN, EVENT_ID, EVENT_SUMMARY, EVENT_DESC, CASE_TYPE,
-                                              caseDetails3.getId(), caseDetails3.getJurisdiction());
+        CaseDetails update = underTest.update(AUTH_TOKEN, CASE_ID, EVENT_ID, EVENT_SUMMARY, EVENT_DESC, data
+        );
         //then
         assertThat(update.getId(), is(Long.parseLong(CASE_ID)));
         assertThat(update.getData().get("solicitorEmail"), is("Padmaja.Ramisetti@hmcts.net"));
@@ -81,57 +92,36 @@ public class CoreCaseDataServiceTest {
         assertThat(update.getData().get("appRespondentFMName"), is("TestRespondant"));
     }
 
-    private CaseDetails createCaseDetails(String id, String value) {
-        LinkedHashMap<String, Object> data = new LinkedHashMap<>();
-        data.put("solicitorEmail", "Padmaja.Ramisetti@hmcts.net");
-        data.put("solicitorName", "PADMAJA");
-        data.put("solicitorReference", "LL02");
-        data.put("applicantLName", "Mamidi");
-        data.put("applicantFMName", "Prashanth");
-        data.put("appRespondentFMName", "TestRespondant");
-        return CaseDetails.builder()
-            .id(Long.valueOf(id))
-            .data(data)
-            .build();
-    }
-
-    private void setupMocks(UserDetails userDetails, Map<String, Object> data) {
+    private void setupMocks(UserDetails userDetails, LinkedHashMap<String, Object> data) {
         when(idamClient.getUserDetails(AUTH_TOKEN)).thenReturn(userDetails);
 
         when(authTokenGenerator.generate()).thenReturn(AUTH_TOKEN);
 
-        CaseDetails caseDetails = CaseDetails.builder()
-            .id(123456789L)
-            .data(data)
-            .build();
-
         StartEventResponse startEventResponse = StartEventResponse.builder()
             .eventId(EVENT_ID)
             .token(EVENT_TOKEN)
-            .caseDetails(caseDetails)
             .build();
 
-        when(dataMigrationService.migrate(data))
-            .thenReturn(data);
-
         when(coreCaseDataApi.startEventForCaseWorker(AUTH_TOKEN, AUTH_TOKEN, "30",
-                                                     null, CASE_TYPE, CASE_ID, EVENT_ID
-        ))
+            JURISDICTION_ID, CASE_TYPE, CASE_ID, EVENT_ID))
             .thenReturn(startEventResponse);
 
         CaseDataContent caseDataContent = CaseDataContent.builder()
             .event(Event.builder()
-                       .id(EVENT_ID)
-                       .description(EVENT_DESC)
-                       .summary(EVENT_SUMMARY)
-                       .build())
+                .id(EVENT_ID)
+                .description(EVENT_DESC)
+                .summary(EVENT_SUMMARY)
+                .build())
             .eventToken(EVENT_TOKEN)
             .data(data)
             .ignoreWarning(false)
             .build();
 
-        when(coreCaseDataApi.submitEventForCaseWorker(AUTH_TOKEN, AUTH_TOKEN, USER_ID, null,
-                                                      CASE_TYPE, CASE_ID, true, caseDataContent
-        )).thenReturn(caseDetails);
+        CaseDetails caseDetails = CaseDetails.builder()
+            .id(123456789L)
+            .data(data)
+            .build();
+        when(coreCaseDataApi.submitEventForCaseWorker(AUTH_TOKEN, AUTH_TOKEN, USER_ID, JURISDICTION_ID,
+            CASE_TYPE, CASE_ID, true, caseDataContent)).thenReturn(caseDetails);
     }
 }
