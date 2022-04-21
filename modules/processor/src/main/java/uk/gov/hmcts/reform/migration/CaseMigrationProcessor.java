@@ -31,8 +31,12 @@ public class CaseMigrationProcessor {
 
     @Getter
     private final List<Long> migratedCases = new ArrayList<>();
+
     @Getter
     private final List<Long> failedCases = new ArrayList<>();
+
+    @Getter
+    private Long totalCases = 0L;
 
     @Value("${migration.parallel:false}")
     private boolean parallel;
@@ -90,9 +94,10 @@ public class CaseMigrationProcessor {
     private void updateCase(String authorisation, Long id, Map<String, Object> data, boolean dryrun) {
 
         if (dryrun) {
-            log.info("Updating case: {}", id);
             return;
         }
+
+        totalCases++;
 
         try {
             log.debug("Case data: {}", data);
