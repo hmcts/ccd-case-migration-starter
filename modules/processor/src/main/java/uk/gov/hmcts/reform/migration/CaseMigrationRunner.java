@@ -56,6 +56,7 @@ public class CaseMigrationRunner implements CommandLineRunner {
             stopWatch.stop();
 
             log.info("-----------------------------------------");
+            log.info("Total number of cases: {}", caseMigrationProcessor.getTotalCases());
             log.info("Total number of processed cases: {}", caseMigrationProcessor.getMigratedCases().size() + caseMigrationProcessor.getFailedCases().size());
             log.info("Total number of migrations performed: {}", caseMigrationProcessor.getMigratedCases().size());
             log.info("-----------------------------------------");
