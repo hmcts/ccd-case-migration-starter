@@ -6,9 +6,7 @@ import static org.elasticsearch.index.query.QueryBuilders.matchQuery;
 import feign.FeignException;
 import java.time.LocalDate;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -24,7 +22,6 @@ import uk.gov.hmcts.reform.ccd.client.CoreCaseDataApi;
 import uk.gov.hmcts.reform.ccd.client.model.CaseDataContent;
 import uk.gov.hmcts.reform.ccd.client.model.CaseDetails;
 import uk.gov.hmcts.reform.ccd.client.model.Event;
-import uk.gov.hmcts.reform.ccd.client.model.PaginatedSearchMetadata;
 import uk.gov.hmcts.reform.ccd.client.model.SearchResult;
 import uk.gov.hmcts.reform.ccd.client.model.StartEventResponse;
 import uk.gov.hmcts.reform.idam.client.IdamClient;
@@ -50,13 +47,6 @@ public class CoreCaseDataService {
         return coreCaseDataApi.getCase(authorisation, authTokenGenerator.generate(), caseId);
     }
 
-    public List<CaseDetails> fetchAll(String authorisation, String userId) {
-        int numberOfPages = getNumberOfPages(authorisation, userId, new HashMap<>());
-        return IntStream.rangeClosed(1, numberOfPages).boxed()
-            .flatMap(pageNumber -> fetchPage(authorisation, userId, pageNumber).stream())
-            .collect(Collectors.toList());
-    }
-
     public List<CaseDetails> fetchAllBetweenDates(String authorisation,
                                                   List<LocalDate> listOfDates,
                                                   boolean parallel) {
@@ -65,12 +55,11 @@ public class CoreCaseDataService {
             : listOfDates.stream();
 
         return processingStream
-            .map(date -> this.fetchAllForDay(authorisation, date.toString()))
-            .flatMap(Collection::stream)
+            .flatMap(date -> fetchAllForDay(authorisation, date.toString(), parallel).stream())
             .collect(Collectors.toList());
     }
 
-    public List<CaseDetails> fetchAllForDay(String authorisation, String day) {
+    public List<CaseDetails> fetchAllForDay(String authorisation, String day, boolean parallel) {
         SearchSourceBuilder searchBuilder = new SearchSourceBuilder();
         searchBuilder.size(1);
         searchBuilder.query(QueryBuilders.boolQuery().must(matchQuery(
@@ -82,25 +71,21 @@ public class CoreCaseDataService {
         searchBuilder.from(pagesize);
         int numberOfPages = total/pagesize;
 
-        return IntStream.rangeClosed(0, numberOfPages).boxed()
-            .flatMap(pageNumber -> fetchPageEs(authorisation, pageNumber, day).stream())
+        Stream<Integer> pageStream = IntStream
+            .rangeClosed(0, numberOfPages - 1)
+            .boxed();
+
+        if (parallel) {
+            log.info("Retrieving pages in parallel.. please wait.");
+            pageStream = pageStream.parallel();
+        }
+
+        return pageStream
+            .flatMap(pageNumber -> fetchPage(authorisation, pageNumber, day).stream())
             .collect(Collectors.toList());
     }
 
-    private int getNumberOfPages(String authorisation, String userId, Map<String, String> searchCriteria) {
-        PaginatedSearchMetadata metadata = coreCaseDataApi.getPaginationInfoForSearchForCaseworkers(authorisation,
-            authTokenGenerator.generate(), userId, jurisdiction, caseType, searchCriteria);
-        return metadata.getTotalPagesCount();
-    }
-
-    private List<CaseDetails> fetchPage(String authorisation, String userId, int pageNumber) {
-        Map<String, String> searchCriteria = new HashMap<>();
-        searchCriteria.put("page", String.valueOf(pageNumber));
-        return coreCaseDataApi.searchForCaseworker(authorisation, authTokenGenerator.generate(), userId, jurisdiction,
-            caseType, searchCriteria);
-    }
-
-    private List<CaseDetails> fetchPageEs(String authorisation, int pageNumber, String day) {
+    private List<CaseDetails> fetchPage(String authorisation, int pageNumber, String day) {
         SearchSourceBuilder searchBuilder = new SearchSourceBuilder();
         searchBuilder.size(pagesize);
         searchBuilder.from(pageNumber * pagesize);
@@ -108,6 +93,8 @@ public class CoreCaseDataService {
             "created_date", day)));
 
         List<CaseDetails> caseDetails = emptyList();
+
+        log.info("Fetching page no. {} for day: {}", pageNumber + 1, day);
 
         try {
             caseDetails = coreCaseDataApi.searchCases(
