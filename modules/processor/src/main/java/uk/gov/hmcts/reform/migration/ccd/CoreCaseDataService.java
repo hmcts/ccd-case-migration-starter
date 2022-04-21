@@ -5,9 +5,8 @@ import static org.elasticsearch.index.query.QueryBuilders.matchQuery;
 
 import feign.FeignException;
 import java.time.LocalDate;
-import java.util.Collection;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Optional;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
@@ -48,19 +47,20 @@ public class CoreCaseDataService {
         return coreCaseDataApi.getCase(authorisation, authTokenGenerator.generate(), caseId);
     }
 
-    public List<CaseDetails> fetchAllBetweenDates(String authorisation,
-                                                  List<LocalDate> listOfDates,
-                                                  boolean parallel) {
+    public Optional<Stream<CaseDetails>> fetchAllBetweenDates(String authorisation,
+                                                              List<LocalDate> listOfDates,
+                                                              boolean parallel) {
         Stream<LocalDate> processingStream = parallel
             ? listOfDates.parallelStream()
             : listOfDates.stream();
 
         return processingStream
-            .flatMap(date -> fetchAllForDay(authorisation, date.toString(), parallel).stream())
-            .collect(Collectors.toList());
+            .map(date -> fetchAllForDay(authorisation, date.toString(), parallel))
+            .flatMap(Optional::stream)
+            .reduce(Stream::concat);
     }
 
-    public List<CaseDetails> fetchAllForDay(String authorisation, String day, boolean parallel) {
+    public Optional<Stream<CaseDetails>> fetchAllForDay(String authorisation, String day, boolean parallel) {
         SearchSourceBuilder searchBuilder = new SearchSourceBuilder();
         searchBuilder.size(1);
         searchBuilder.query(QueryBuilders.boolQuery().must(matchQuery(
@@ -82,8 +82,8 @@ public class CoreCaseDataService {
         }
 
         return pageStream
-            .flatMap(pageNumber -> fetchPage(authorisation, pageNumber, day).stream())
-            .collect(Collectors.toList());
+            .map(pageNumber -> fetchPage(authorisation, pageNumber, day).stream())
+            .reduce(Stream::concat);
     }
 
     private List<CaseDetails> fetchPage(String authorisation, int pageNumber, String day) {

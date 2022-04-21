@@ -6,6 +6,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import lombok.Getter;
@@ -65,10 +66,17 @@ public class CaseMigrationProcessor {
         if (firstDate != null && lastDate != null) {
             List<LocalDate> listOfDates = getListOfDates(LocalDate.parse(firstDate), LocalDate.parse(lastDate));
 
-            Stream<CaseDetails> caseDetailsStream =
-                coreCaseDataService.fetchAllBetweenDates(userToken, listOfDates, parallel)
-                    .stream()
-                    .filter(dataMigrationService.accepts());
+            Optional<Stream<CaseDetails>> caseDetailsStreamOptional =
+                coreCaseDataService.fetchAllBetweenDates(userToken, listOfDates, parallel);
+
+            Stream<CaseDetails> caseDetailsStream;
+
+            if (caseDetailsStreamOptional.isPresent()) {
+                caseDetailsStream = caseDetailsStreamOptional.get();
+            } else {
+                log.info("Something went wrong - didn't get results back.");
+                return;
+            }
 
             if (parallel) {
                 log.info("Executing in parallel.. please wait.");
