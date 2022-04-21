@@ -56,8 +56,7 @@ public class CoreCaseDataService {
             : listOfDates.stream();
 
         return processingStream
-            .map(date -> fetchAllForDay(authorisation, date.toString(), parallel))
-            .flatMap(Collection::stream)
+            .flatMap(date -> fetchAllForDay(authorisation, date.toString(), parallel).stream())
             .collect(Collectors.toList());
     }
 
