@@ -108,7 +108,6 @@ public class CaseMigrationProcessor {
         }
 
         try {
-            log.debug("Case data: {}", data);
             var migratedData = dataMigrationService.migrate(data);
             coreCaseDataService.update(
                 authorisation,
