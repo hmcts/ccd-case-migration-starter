@@ -16,6 +16,8 @@ import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Stream;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
@@ -166,7 +168,7 @@ public class CaseMigrationProcessorTest {
     }
 
     private void mockDataFetch(CaseDetails... caseDetails) {
-        when(coreCaseDataService.fetchAllForDay(eq(USER_TOKEN), anyString(), false)).thenReturn(asList(caseDetails));
+        when(coreCaseDataService.fetchAllForDay(eq(USER_TOKEN), anyString(), false)).thenReturn(Optional.of(Stream.of(caseDetails)));
     }
 
     private void mockDataUpdate(CaseDetails caseDetails) {
