@@ -69,12 +69,11 @@ public class CaseMigrationProcessor {
 
             Stream<CaseDetails> caseDetailsStream;
 
-            if (caseDetailsStreamOptional.isPresent()) {
-                caseDetailsStream = caseDetailsStreamOptional.get();
-            } else {
-                log.info("Something went wrong - didn't get results back.");
+            if (caseDetailsStreamOptional.isEmpty()) {
                 return;
             }
+
+            caseDetailsStream = caseDetailsStreamOptional.get();
 
             if (parallel) {
                 log.info("Executing in parallel.. please wait.");
