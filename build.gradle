@@ -11,7 +11,7 @@ subprojects {
   apply plugin: 'com.jfrog.bintray'
 
   group = 'uk.gov.hmcts.reform.ccd-case-migration'
-  version = 'sscs-9911-rc-2'
+  version = 'DEV-SNAPSHOT'
 
   sourceCompatibility = '11'
   targetCompatibility = '11'
