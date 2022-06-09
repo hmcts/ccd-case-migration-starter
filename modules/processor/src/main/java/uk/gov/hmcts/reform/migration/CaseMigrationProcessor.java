@@ -1,7 +1,5 @@
 package uk.gov.hmcts.reform.migration;
 
-import static java.util.Collections.singletonList;
-
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;

@@ -39,7 +39,6 @@ public class CaseMigrationRunner implements CommandLineRunner {
     public void run(String... args) {
         try {
             String userToken = idamClient.authenticateUser(idamUsername, idamPassword);
-            String userId = idamClient.getUserDetails(userToken).getId();
 
             StopWatch stopWatch = StopWatch.createStarted();
 
