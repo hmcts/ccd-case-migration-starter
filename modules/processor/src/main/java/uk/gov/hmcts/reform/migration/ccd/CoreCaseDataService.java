@@ -42,6 +42,9 @@ public class CoreCaseDataService {
     @Value("${migration.caseType}")
     private String caseType;
 
+    @Value("${migration.indexCases}")
+    private boolean indexCases;
+
     private final IdamClient idamClient;
     private final AuthTokenGenerator authTokenGenerator;
     private final CoreCaseDataApi coreCaseDataApi;
@@ -67,6 +70,10 @@ public class CoreCaseDataService {
         int total = searchCases(authorisation, singleCaseQuery(day)).getTotal();
 
         log.info("Total for " + day + " is " + total);
+
+        if (indexCases) {
+            return Optional.empty();
+        }
 
         int numberOfPages = (int) Math.ceil((double) total / PAGE_SIZE);
 
