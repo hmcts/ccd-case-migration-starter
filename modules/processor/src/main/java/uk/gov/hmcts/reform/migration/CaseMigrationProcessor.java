@@ -37,7 +37,7 @@ public class CaseMigrationProcessor {
     @Getter
     private Long totalCases = 0L;
 
-    @Value("${migration.parallel:false}")
+    @Value("${migration.parallel}")
     private boolean parallel;
 
     public void processSingleCase(String userToken, String caseId, boolean dryrun) {
