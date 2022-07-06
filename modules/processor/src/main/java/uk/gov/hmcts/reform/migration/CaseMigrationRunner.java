@@ -19,13 +19,13 @@ public class CaseMigrationRunner implements CommandLineRunner {
     private String idamUsername;
     @Value("${migration.idam.password}")
     private String idamPassword;
-    @Value("${migration.caseId}")
+    @Value("${migration.caseId:}")
     private String ccdCaseId;
     @Value("${migration.startDate}")
     private String startDate;
     @Value("${migration.endDate}")
     private String endDate;
-    @Value("${migration.dryrun}")
+    @Value("${migration.dryrun:false}")
     private boolean dryrun;
 
     private final IdamClient idamClient;

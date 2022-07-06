@@ -34,7 +34,6 @@ public class CoreCaseDataService {
 
     private static final int PAGE_SIZE = 50;
     private static final String CREATED_DATE = "created_date";
-    private static final String SSCS_CASE_TYPE = "Benefit";
 
     @Value("${migration.jurisdiction}")
     private String jurisdiction;
@@ -42,7 +41,7 @@ public class CoreCaseDataService {
     @Value("${migration.caseType}")
     private String caseType;
 
-    @Value("${migration.indexCases}")
+    @Value("${migration.indexCases:false}")
     private boolean indexCases;
 
     private final IdamClient idamClient;
@@ -92,9 +91,10 @@ public class CoreCaseDataService {
     }
 
     public CaseDetails fetchOldestCase(String authorisation) {
-        return searchCases(authorisation, oldestCaseQuery())
-            .getCases()
-            .get(0);
+        List<CaseDetails> cases = searchCases(authorisation, oldestCaseQuery())
+            .getCases();
+        return cases !=null && cases.size() > 0 ? cases
+            .get(0) : null;
     }
 
     public CaseDetails update(String authorisation, String caseId, String eventId, String eventSummary, String eventDescription, Object data) {
@@ -151,7 +151,7 @@ public class CoreCaseDataService {
         return coreCaseDataApi.searchCases(
             authorisation,
             authTokenGenerator.generate(),
-            SSCS_CASE_TYPE,
+            caseType,
             searchBuilder.toString());
     }
 
