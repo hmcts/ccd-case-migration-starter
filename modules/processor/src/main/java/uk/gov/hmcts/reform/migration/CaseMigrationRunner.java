@@ -8,6 +8,8 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.PropertySource;
 import uk.gov.hmcts.reform.idam.client.IdamClient;
+import uk.gov.hmcts.reform.idam.client.models.User;
+import uk.gov.hmcts.reform.idam.client.models.UserDetails;
 
 @Slf4j
 @SpringBootApplication
@@ -18,7 +20,7 @@ public class CaseMigrationRunner implements CommandLineRunner {
     private String idamUsername;
     @Value("${migration.idam.password}")
     private String idamPassword;
-    @Value("${migration.caseId}")
+    @Value("${migration.caseId:}")
     private String ccdCaseId;
     @Autowired
     private IdamClient idamClient;
@@ -34,15 +36,17 @@ public class CaseMigrationRunner implements CommandLineRunner {
         try {
             String userToken = idamClient.authenticateUser(idamUsername, idamPassword);
             log.debug("User token: {}", userToken);
-            String userId = idamClient.getUserDetails(userToken).getId();
+            UserDetails userDetails = idamClient.getUserDetails(userToken);
+            String userId = userDetails.getId();
             log.debug("User ID: {}", userId);
+            User user = new User(userToken, userDetails);
 
             if (ccdCaseId != null && !ccdCaseId.isBlank()) {
                 log.info("Data migration of single case started");
-                caseMigrationProcessor.processSingleCase(userToken, ccdCaseId);
+                caseMigrationProcessor.processSingleCase(user, ccdCaseId);
             } else {
                 log.info("Data migration of all cases started");
-                caseMigrationProcessor.processAllCases(userToken, userId);
+                caseMigrationProcessor.processAllCases(user);
             }
 
             log.info("-----------------------------------------");

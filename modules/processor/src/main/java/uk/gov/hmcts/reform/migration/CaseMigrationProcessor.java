@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import uk.gov.hmcts.reform.ccd.client.model.CaseDetails;
+import uk.gov.hmcts.reform.idam.client.models.User;
 import uk.gov.hmcts.reform.migration.service.DataMigrationService;
 import uk.gov.hmcts.reform.migration.ccd.CoreCaseDataService;
 
@@ -28,33 +29,34 @@ public class CaseMigrationProcessor {
     @Getter
     private List<Long> failedCases = new ArrayList<>();
 
-    public void processSingleCase(String userToken, String caseId) {
+    public void processSingleCase(User user, String caseId) {
         CaseDetails caseDetails;
         try {
-            caseDetails = coreCaseDataService.fetchOne(userToken, caseId);
+            caseDetails = coreCaseDataService.fetchOne(user.getAuthToken(), caseId);
         } catch (Exception ex) {
             log.error("Case {} not found due to: {}", caseId, ex.getMessage());
             return;
         }
         if (dataMigrationService.accepts().test(caseDetails)) {
-            updateCase(userToken, caseDetails.getId(), caseDetails.getData());
+            updateCase(user, caseDetails);
         } else {
             log.info("Case {} already migrated", caseDetails.getId());
         }
     }
 
-    public void processAllCases(String userToken, String userId) {
-        coreCaseDataService.fetchAll(userToken, userId).stream()
+    public void processAllCases(User user) {
+        coreCaseDataService.fetchAll(user.getAuthToken(), user.getUserDetails().getId()).stream()
             .filter(dataMigrationService.accepts())
-            .forEach(caseDetails -> updateCase(userToken, caseDetails.getId(), caseDetails.getData()));
+            .forEach(caseDetails -> updateCase(user, caseDetails));
     }
 
-    private void updateCase(String authorisation, Long id, Map<String, Object> data) {
+    private void updateCase(User user, CaseDetails caseDetails) {
+        Long id = caseDetails.getId();
         log.info("Updating case {}", id);
         try {
-            log.debug("Case data: {}", data);
-            coreCaseDataService.update(authorisation, id.toString(),
-                EVENT_ID, EVENT_SUMMARY, EVENT_DESCRIPTION, dataMigrationService.migrate(data));
+            log.debug("Case data: {}", caseDetails.getData());
+            coreCaseDataService.update(user.getAuthToken(), id.toString(),
+                EVENT_ID, EVENT_SUMMARY, EVENT_DESCRIPTION, dataMigrationService.migrate(user, caseDetails));
             log.info("Case {} successfully updated", id);
             migratedCases.add(id);
         } catch (Exception e) {
