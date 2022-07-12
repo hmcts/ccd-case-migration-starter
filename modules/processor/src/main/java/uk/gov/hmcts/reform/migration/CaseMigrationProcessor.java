@@ -6,12 +6,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import uk.gov.hmcts.reform.ccd.client.model.CaseDetails;
 import uk.gov.hmcts.reform.idam.client.models.User;
-import uk.gov.hmcts.reform.migration.service.DataMigrationService;
 import uk.gov.hmcts.reform.migration.ccd.CoreCaseDataService;
+import uk.gov.hmcts.reform.migration.service.DataMigrationService;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+import java.util.stream.IntStream;
 
 @Slf4j
 @Component
@@ -46,6 +47,21 @@ public class CaseMigrationProcessor {
 
     public void processAllCases(User user) {
         coreCaseDataService.fetchAll(user.getAuthToken(), user.getUserDetails().getId()).stream()
+            .filter(dataMigrationService.accepts())
+            .forEach(caseDetails -> updateCase(user, caseDetails));
+    }
+
+    public void processAllCasesPageByPage(User user) {
+        String authToken = user.getAuthToken();
+        String userId = user.getUserDetails().getId();
+        int numberOfPages = coreCaseDataService.getNumberOfPages(authToken, userId, new HashMap<>());
+        log.info("Total no of pages: {}", numberOfPages);
+
+        IntStream.rangeClosed(1, numberOfPages).boxed()
+            .peek(pageNo ->
+                log.info("Fetching cases for the page no {} of total {}", pageNo, numberOfPages)
+            )
+            .flatMap(pageNumber -> coreCaseDataService.fetchPage(authToken, userId, pageNumber).stream())
             .filter(dataMigrationService.accepts())
             .forEach(caseDetails -> updateCase(user, caseDetails));
     }

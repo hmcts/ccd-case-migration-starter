@@ -1,5 +1,6 @@
 package uk.gov.hmcts.reform.migration.ccd;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -14,12 +15,14 @@ import uk.gov.hmcts.reform.migration.auth.AuthUtil;
 import uk.gov.hmcts.reform.idam.client.IdamClient;
 import uk.gov.hmcts.reform.idam.client.models.UserDetails;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+@Slf4j
 @Service
 public class CoreCaseDataService {
 
@@ -46,17 +49,22 @@ public class CoreCaseDataService {
             .collect(Collectors.toList());
     }
 
-    private int getNumberOfPages(String authorisation, String userId, Map<String, String> searchCriteria) {
+    public int getNumberOfPages(String authorisation, String userId, Map<String, String> searchCriteria) {
         PaginatedSearchMetadata metadata = coreCaseDataApi.getPaginationInfoForSearchForCaseworkers(authorisation,
             authTokenGenerator.generate(), userId, jurisdiction, caseType, searchCriteria);
         return metadata.getTotalPagesCount();
     }
 
-    private List<CaseDetails> fetchPage(String authorisation, String userId, int pageNumber) {
+    public List<CaseDetails> fetchPage(String authorisation, String userId, int pageNumber) {
+        try {
         Map<String, String> searchCriteria = new HashMap<>();
         searchCriteria.put("page", String.valueOf(pageNumber));
         return coreCaseDataApi.searchForCaseworker(authorisation, authTokenGenerator.generate(), userId, jurisdiction,
             caseType, searchCriteria);
+        } catch (Exception e) {
+            log.error("Fetching of cases failed for the page no {} due to: {}", pageNumber, e.getMessage());
+        }
+        return Collections.emptyList();
     }
 
     public CaseDetails update(String authorisation, String caseId, String eventId, String eventSummary, String eventDescription, Object data) {

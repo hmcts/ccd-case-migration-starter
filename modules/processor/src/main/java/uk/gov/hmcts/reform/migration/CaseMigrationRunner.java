@@ -22,6 +22,9 @@ public class CaseMigrationRunner implements CommandLineRunner {
     private String idamPassword;
     @Value("${migration.caseId:}")
     private String ccdCaseId;
+
+    @Value("${migration.pageByPage:true}")
+    private Boolean pageByPage;
     @Autowired
     private IdamClient idamClient;
     @Autowired
@@ -45,8 +48,13 @@ public class CaseMigrationRunner implements CommandLineRunner {
                 log.info("Data migration of single case started");
                 caseMigrationProcessor.processSingleCase(user, ccdCaseId);
             } else {
-                log.info("Data migration of all cases started");
-                caseMigrationProcessor.processAllCases(user);
+                if (pageByPage) {
+                    log.info("Data migration of all cases page by page started");
+                    caseMigrationProcessor.processAllCasesPageByPage(user);
+                } else {
+                    log.info("Data migration of all cases started");
+                    caseMigrationProcessor.processAllCases(user);
+                }
             }
 
             log.info("-----------------------------------------");
