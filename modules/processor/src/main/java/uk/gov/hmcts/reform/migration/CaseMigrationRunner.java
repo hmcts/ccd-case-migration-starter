@@ -42,12 +42,14 @@ public class CaseMigrationRunner implements CommandLineRunner {
 
             StopWatch stopWatch = StopWatch.createStarted();
 
+            log.info(userToken);
+
             if (ccdCaseId != null && !ccdCaseId.isBlank()) {
                 log.info("Data migration of single case started");
                 caseMigrationProcessor.processSingleCase(userToken, ccdCaseId, dryrun);
             } else {
-                log.info("Data migration of cases between {} and {} started", startDate, endDate);
-                caseMigrationProcessor.processAllCases(userToken, startDate, endDate, dryrun);
+                log.info("Data migration of cases started");
+                caseMigrationProcessor.fetchAndProcessCases(userToken, dryrun);
             }
 
             stopWatch.stop();
@@ -58,9 +60,10 @@ public class CaseMigrationRunner implements CommandLineRunner {
             log.info("Total number of migrations performed: {}", caseMigrationProcessor.getMigratedCases().size());
             log.info("-----------------------------------------");
             log.info("Migrated cases: {} ", !caseMigrationProcessor.getMigratedCases().isEmpty() ? caseMigrationProcessor.getMigratedCases() : "NONE");
-            log.info("Failed cases: {}", !caseMigrationProcessor.getFailedCases().isEmpty() ? caseMigrationProcessor.getFailedCases() : "NONE");
+            log.info("Failed cases: {}", caseMigrationProcessor.getFailedCases().size());
             log.info("-----------------------------------------");
-            log.info("Data migration completed in: {} minutes.", stopWatch.getTime(TimeUnit.MINUTES));
+            log.info("Data migration completed in: {} minutes ({} seconds).",
+                stopWatch.getTime(TimeUnit.MINUTES), stopWatch.getTime(TimeUnit.SECONDS));
             log.info("-----------------------------------------");
         } catch (Throwable e) {
             log.error("Migration failed with the following reason: {}", e.getMessage(), e);
