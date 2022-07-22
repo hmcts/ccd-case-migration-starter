@@ -26,6 +26,7 @@ import uk.gov.hmcts.reform.migration.service.DataMigrationService;
 @RunWith(MockitoJUnitRunner.class)
 public class CaseMigrationProcessorTest {
 
+    private static final String USER_ID = "30";
     private static final String USER_TOKEN = "Bearer eeeejjjttt";
     private static final String CASE_ID = "11111";
     private static final String EVENT_ID = "migrateCase";
@@ -78,7 +79,7 @@ public class CaseMigrationProcessorTest {
         assertThat(caseMigrationProcessor.getMigratedCases(), hasSize(0));
     }
 
-    @Ignore
+    @Test
     public void shouldProcessAllTheCandidateCases_whenOneCaseFailed() {
         mockDataFetch(caseDetails1, caseDetails2, caseDetails3);
         mockDataUpdate(caseDetails1);
@@ -88,14 +89,12 @@ public class CaseMigrationProcessorTest {
         when(dataMigrationService.migrate(caseDetails2.getData())).thenReturn(caseDetails2.getData());
         when(dataMigrationService.migrate(caseDetails3.getData())).thenReturn(caseDetails3.getData());
         when(coreCaseDataService.update(USER_TOKEN, caseDetails3.getId().toString(), EVENT_ID, EVENT_SUMMARY, EVENT_DESCRIPTION, caseDetails3.getData())).thenThrow(new RuntimeException("Internal server error"));
-
-        caseMigrationProcessor.processAllCases(USER_TOKEN, "2022-03-01", "2022-03-02", false);
-
+        caseMigrationProcessor.processAllCases(USER_TOKEN, USER_ID, false);
         assertThat(caseMigrationProcessor.getFailedCases(), contains(1113L));
-        assertThat(caseMigrationProcessor.getMigratedCases(), containsInAnyOrder(1111L, 1112L));
+        assertThat(caseMigrationProcessor.getMigratedCases(), contains(1111L, 1112L));
     }
 
-    @Ignore
+    @Test
     public void shouldProcessAllTheCandidateCases_whenTwoCasesFailed() {
         mockDataFetch(caseDetails1, caseDetails2, caseDetails3);
         mockDataUpdate(caseDetails1);
@@ -105,10 +104,8 @@ public class CaseMigrationProcessorTest {
         when(dataMigrationService.migrate(caseDetails3.getData())).thenReturn(caseDetails3.getData());
         when(coreCaseDataService.update(USER_TOKEN, caseDetails2.getId().toString(), EVENT_ID, EVENT_SUMMARY, EVENT_DESCRIPTION, caseDetails2.getData())).thenThrow(new RuntimeException("Internal server error"));
         when(coreCaseDataService.update(USER_TOKEN, caseDetails3.getId().toString(), EVENT_ID, EVENT_SUMMARY, EVENT_DESCRIPTION, caseDetails3.getData())).thenThrow(new RuntimeException("Internal server error"));
-
-        caseMigrationProcessor.processAllCases(USER_TOKEN, "2022-03-01", "2022-03-02", false);
-
-        assertThat(caseMigrationProcessor.getFailedCases(), containsInAnyOrder(1112L, 1113L));
+        caseMigrationProcessor.processAllCases(USER_TOKEN, USER_ID, false);
+        assertThat(caseMigrationProcessor.getFailedCases(), contains(1112L, 1113L));
         assertThat(caseMigrationProcessor.getMigratedCases(), contains(1111L));
     }
 
@@ -116,8 +113,8 @@ public class CaseMigrationProcessorTest {
     public void shouldProcessNoCaseWhenNoCasesAvailable() {
         mockDataFetch();
 
-//        when(dataMigrationService.accepts()).thenReturn(candidate -> true);
-        caseMigrationProcessor.processAllCases(USER_TOKEN,"2022-03-01", "2022-03-30", false);
+        when(dataMigrationService.accepts()).thenReturn(candidate -> true);
+        caseMigrationProcessor.processAllCases(USER_TOKEN, USER_ID, false);
         assertThat(caseMigrationProcessor.getFailedCases(), hasSize(0));
         assertThat(caseMigrationProcessor.getFailedCases(), hasSize(0));
     }

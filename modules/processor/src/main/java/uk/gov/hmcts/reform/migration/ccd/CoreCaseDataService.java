@@ -1,19 +1,26 @@
 package uk.gov.hmcts.reform.migration.ccd;
 
 import static java.util.Collections.emptyList;
-import static org.elasticsearch.index.query.QueryBuilders.matchQuery;
+import static uk.gov.hmcts.reform.migration.queries.CcdElasticSearchQueries.fetchAllUnsetCaseAccessManagementFieldsCasesQuery;
+import static uk.gov.hmcts.reform.migration.queries.CcdElasticSearchQueries.oldestCaseQuery;
+import static uk.gov.hmcts.reform.migration.queries.CcdElasticSearchQueries.pageForUnsetCaseAccessManagementFieldsFieldsQuery;
 
 import feign.FeignException;
+
 import java.time.LocalDate;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.elasticsearch.index.query.QueryBuilders;
+import org.apache.commons.lang3.time.StopWatch;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
-import org.elasticsearch.search.sort.SortOrder;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import uk.gov.hmcts.reform.authorisation.generators.AuthTokenGenerator;
@@ -21,6 +28,7 @@ import uk.gov.hmcts.reform.ccd.client.CoreCaseDataApi;
 import uk.gov.hmcts.reform.ccd.client.model.CaseDataContent;
 import uk.gov.hmcts.reform.ccd.client.model.CaseDetails;
 import uk.gov.hmcts.reform.ccd.client.model.Event;
+import uk.gov.hmcts.reform.ccd.client.model.PaginatedSearchMetadata;
 import uk.gov.hmcts.reform.ccd.client.model.SearchResult;
 import uk.gov.hmcts.reform.ccd.client.model.StartEventResponse;
 import uk.gov.hmcts.reform.idam.client.IdamClient;
@@ -32,9 +40,9 @@ import uk.gov.hmcts.reform.migration.auth.AuthUtil;
 @RequiredArgsConstructor
 public class CoreCaseDataService {
 
-    private static final int PAGE_SIZE = 50;
-    private static final String CREATED_DATE = "created_date";
     private static final String SSCS_CASE_TYPE = "Benefit";
+
+
 
     @Value("${migration.jurisdiction}")
     private String jurisdiction;
@@ -53,42 +61,33 @@ public class CoreCaseDataService {
         return coreCaseDataApi.getCase(authorisation, authTokenGenerator.generate(), caseId);
     }
 
-    public Optional<Stream<CaseDetails>> fetchAllBetweenDates(String authorisation,
-                                                              List<LocalDate> listOfDates,
-                                                              boolean parallel) {
-        Stream<LocalDate> processingStream = parallel
-            ? listOfDates.parallelStream()
-            : listOfDates.stream();
+    public List<CaseDetails> fetchNCases(String authorisation, int casesToFetch, long searchFrom) {
 
-        return processingStream
-            .map(date -> fetchAllForDay(authorisation, date.toString(), parallel))
-            .flatMap(Optional::stream)
-            .reduce(Stream::concat);
+        StopWatch stopWatch = StopWatch.createStarted();
+
+        List<CaseDetails> page = fetchPage(authorisation,
+            pageForUnsetCaseAccessManagementFieldsFieldsQuery(searchFrom, casesToFetch));
+
+        stopWatch.stop();
+
+        log.info("Case search with page size: {} completed in: {} minutes ({} seconds).", casesToFetch,
+            stopWatch.getTime(TimeUnit.MINUTES), stopWatch.getTime(TimeUnit.SECONDS));
+
+        return page;
+
     }
 
-    public Optional<Stream<CaseDetails>> fetchAllForDay(String authorisation, String day, boolean parallel) {
-        int total = searchCases(authorisation, singleCaseQuery(day)).getTotal();
+    private List<CaseDetails> fetchPage(String authorisation, SearchSourceBuilder searchSourceBuilder) {
+        List<CaseDetails> caseDetails = emptyList();
 
-        log.info("Total for " + day + " is " + total);
-
-        if (indexCases) {
-            return Optional.empty();
+        try {
+            caseDetails = searchCases(authorisation, searchSourceBuilder).getCases();
+        } catch (FeignException fe) {
+            log.error("Feign Exception message: {} with search string: {}",
+                fe.contentUTF8(), searchSourceBuilder);
         }
 
-        int numberOfPages = (int) Math.ceil((double) total / PAGE_SIZE);
-
-        Stream<Integer> pageStream = IntStream
-            .rangeClosed(0, numberOfPages - 1)
-            .boxed();
-
-        if (parallel) {
-            log.info("Retrieving pages in parallel.. please wait.");
-            pageStream = pageStream.parallel();
-        }
-
-        return pageStream
-            .map(pageNumber -> fetchPage(authorisation, day, pageNumber).stream())
-            .reduce(Stream::concat);
+        return caseDetails;
     }
 
     public CaseDetails fetchOldestCase(String authorisation) {
@@ -131,23 +130,7 @@ public class CoreCaseDataService {
             caseDataContent);
     }
 
-    private List<CaseDetails> fetchPage(String authorisation, String day, int pageNumber) {
-        List<CaseDetails> caseDetails = emptyList();
-        SearchSourceBuilder searchBuilder = pageQuery(day, pageNumber);
-
-        log.info("Fetching page no. {} for day: {}", pageNumber + 1, day);
-
-        try {
-            caseDetails = searchCases(authorisation, searchBuilder).getCases();
-        } catch (FeignException fe) {
-            log.error("Feign Exception message: {} with search string: {}",
-                fe.contentUTF8(), searchBuilder);
-        }
-
-        return caseDetails;
-    }
-
-    private SearchResult searchCases(String authorisation, SearchSourceBuilder searchBuilder) {
+    public SearchResult searchCases(String authorisation, SearchSourceBuilder searchBuilder) {
         return coreCaseDataApi.searchCases(
             authorisation,
             authTokenGenerator.generate(),
@@ -155,25 +138,25 @@ public class CoreCaseDataService {
             searchBuilder.toString());
     }
 
-    private SearchSourceBuilder oldestCaseQuery() {
-        return SearchSourceBuilder.searchSource()
-            .size(1)
-            .sort(CREATED_DATE, SortOrder.ASC)
-            .query(QueryBuilders.boolQuery());
+
+    public List<CaseDetails> fetchAll(String authorisation, String userId) {
+        int numberOfPages = getNumberOfPages(authorisation, userId, new HashMap<>());
+        return IntStream.rangeClosed(1, numberOfPages).boxed()
+            .flatMap(pageNumber -> fetchPage(authorisation, userId, pageNumber).stream())
+            .collect(Collectors.toList());
     }
 
-    private SearchSourceBuilder singleCaseQuery(String day) {
-        return SearchSourceBuilder.searchSource()
-            .size(1)
-            .query(QueryBuilders.boolQuery()
-                .must(matchQuery(CREATED_DATE, day)));
+    private List<CaseDetails> fetchPage(String authorisation, String userId, int pageNumber) {
+        Map<String, String> searchCriteria = new HashMap<>();
+        searchCriteria.put("page", String.valueOf(pageNumber));
+        return coreCaseDataApi.searchForCaseworker(authorisation, authTokenGenerator.generate(), userId, jurisdiction,
+            caseType, searchCriteria);
     }
 
-    private SearchSourceBuilder pageQuery(String day, int pageNumber) {
-        return SearchSourceBuilder.searchSource()
-            .size(PAGE_SIZE)
-            .from(pageNumber * PAGE_SIZE)
-            .query(QueryBuilders.boolQuery()
-                .must(matchQuery(CREATED_DATE, day)));
+    private int getNumberOfPages(String authorisation, String userId, Map<String, String> searchCriteria) {
+        PaginatedSearchMetadata metadata = coreCaseDataApi.getPaginationInfoForSearchForCaseworkers(authorisation,
+            authTokenGenerator.generate(), userId, jurisdiction, caseType, searchCriteria);
+        return metadata.getTotalPagesCount();
     }
+
 }
