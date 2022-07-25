@@ -11,6 +11,10 @@ import uk.gov.hmcts.reform.idam.client.IdamClient;
 import uk.gov.hmcts.reform.idam.client.models.User;
 import uk.gov.hmcts.reform.idam.client.models.UserDetails;
 
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
 @Slf4j
 @SpringBootApplication
 @PropertySource("classpath:application.properties")
@@ -22,6 +26,9 @@ public class CaseMigrationRunner implements CommandLineRunner {
     private String idamPassword;
     @Value("${migration.caseId:}")
     private String ccdCaseId;
+
+    @Value("${migration.caseIds:}")
+    private String ccdCaseIds;
 
     @Value("${migration.pageByPage:true}")
     private Boolean pageByPage;
@@ -47,6 +54,16 @@ public class CaseMigrationRunner implements CommandLineRunner {
             if (ccdCaseId != null && !ccdCaseId.isBlank()) {
                 log.info("Data migration of single case started");
                 caseMigrationProcessor.processSingleCase(user, ccdCaseId);
+            } else if (ccdCaseIds != null && !ccdCaseIds.isBlank()) {
+                log.info("Data migration of list of cases started");
+                List<String> caseIdsList = Stream.of(ccdCaseIds.split(","))
+                    .map(String::trim)
+                    .collect(Collectors.toList());
+                log.info("Total case ids provided: " + caseIdsList.size());
+                caseIdsList.stream().forEach(caseId -> {
+                    caseMigrationProcessor.processSingleCase(user, caseId);
+                });
+
             } else {
                 if (pageByPage) {
                     log.info("Data migration of all cases page by page started");
