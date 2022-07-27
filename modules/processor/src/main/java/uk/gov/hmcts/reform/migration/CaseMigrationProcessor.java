@@ -45,18 +45,6 @@ public class CaseMigrationProcessor {
     @Getter
     private Long totalCases = 0L;
 
-    @Value("${migration.parallel}")
-    private boolean parallel;
-
-    @Value("${migration.pageSize}")
-    private int pageSize;
-
-    @Value("${migration.numThreads}")
-    private int numThreads;
-
-    @Value("${migration.maxCasesToProcess}")
-    private int maxCasesToProcess;
-
     public void processSingleCase(String userToken, String caseId, boolean dryRun) {
         CaseDetails caseDetails;
         try {
@@ -72,30 +60,32 @@ public class CaseMigrationProcessor {
         }
     }
 
-    public void fetchAndProcessCases(String userToken, boolean dryRun) throws InterruptedException {
+    public void fetchAndProcessCases(String userToken, boolean dryRun, int numThreads, MigrationPageParams pageParams)
+        throws InterruptedException {
 
         SearchResult initialSearch = coreCaseDataService.searchCases(userToken,
             fetchAllUnsetCaseAccessManagementFieldsCasesQuery());
 
-        int totalCasesToProcess = resolveTotalCasesToProcess(initialSearch);
+        if (initialSearch.getTotal() <= 0) {
+            return;
+        }
 
         totalTimer.start();
-        //Need to fix the off by one issue.
+
+        int totalCasesToProcess = resolveTotalCasesToProcess(initialSearch, pageParams.getMaxCasesToProcess());
+
         Long searchFrom = handleFirstCase(userToken, dryRun, initialSearch);
-
-        totalCasesToProcess -= 1;
-
-        int casesFetched = 0;
 
         ExecutorService executorService = Executors.newFixedThreadPool(numThreads);
 
-        fetchAndSubmitTasks(userToken, dryRun, totalCasesToProcess, searchFrom, casesFetched, executorService);
+        fetchAndSubmitTasks(userToken, dryRun, totalCasesToProcess, pageParams.getPageSize(), searchFrom,
+            executorService);
 
         executorService.shutdown();
         executorService.awaitTermination(Integer.MAX_VALUE, TimeUnit.DAYS);
     }
 
-    private int resolveTotalCasesToProcess(SearchResult initialSearch) {
+    private int resolveTotalCasesToProcess(SearchResult initialSearch, int maxCasesToProcess) {
         int totalCasesToProcess = 0;
 
         if (maxCasesToProcess > 0) {
@@ -109,12 +99,16 @@ public class CaseMigrationProcessor {
         return totalCasesToProcess;
     }
 
-    private void fetchAndSubmitTasks(String userToken, boolean dryRun, int totalCasesToProcess, Long searchFrom, int casesFetched,
-                           ExecutorService executorService) {
+    private void fetchAndSubmitTasks(String userToken, boolean dryRun, int totalCasesToProcess, int pageSize,
+                                     Long searchFrom, ExecutorService executorService) {
+        int casesFetched = 1;
+        int numCasesToFetch = pageSize;
 
         while (casesFetched < totalCasesToProcess) {
+            numCasesToFetch = resolvePageSize(totalCasesToProcess, casesFetched, numCasesToFetch, pageSize);
+
             List<CaseDetails> caseDetails =
-                coreCaseDataService.fetchNCases(userToken, pageSize, searchFrom);
+                coreCaseDataService.fetchNCases(userToken, numCasesToFetch, searchFrom);
 
             if (caseDetails.isEmpty()) {
                 break;
@@ -132,6 +126,14 @@ public class CaseMigrationProcessor {
 
             log.info("{} cases fetched out of {}", casesFetched, totalCasesToProcess);
         }
+    }
+
+    private int resolvePageSize(int totalCasesToProcess, int casesFetched, int numCasesToFetch, int pageSize) {
+        int remainingCases = totalCasesToProcess - casesFetched;
+        if (remainingCases < pageSize) {
+            numCasesToFetch = remainingCases;
+        }
+        return numCasesToFetch;
     }
 
     private Long handleFirstCase(String userToken, boolean dryRun, SearchResult initialSearch) {
@@ -177,7 +179,7 @@ public class CaseMigrationProcessor {
         }
 
         if (totalCases % 1000 == 0) {
-            log.info("--------{} cases migrated in {} minutes ({} seconds)-------", totalCases,
+            log.info("----------{} cases migrated in {} minutes ({} seconds)----------", totalCases,
                 totalTimer.getTime(TimeUnit.MINUTES), totalTimer.getTime(TimeUnit.SECONDS));
         }
     }

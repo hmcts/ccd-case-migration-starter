@@ -1,21 +1,17 @@
 package uk.gov.hmcts.reform.migration.ccd;
 
 import static java.util.Collections.emptyList;
-import static uk.gov.hmcts.reform.migration.queries.CcdElasticSearchQueries.fetchAllUnsetCaseAccessManagementFieldsCasesQuery;
 import static uk.gov.hmcts.reform.migration.queries.CcdElasticSearchQueries.oldestCaseQuery;
 import static uk.gov.hmcts.reform.migration.queries.CcdElasticSearchQueries.pageForUnsetCaseAccessManagementFieldsFieldsQuery;
 
 import feign.FeignException;
 
-import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
-import java.util.stream.Stream;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -42,16 +38,11 @@ public class CoreCaseDataService {
 
     private static final String SSCS_CASE_TYPE = "Benefit";
 
-
-
     @Value("${migration.jurisdiction}")
     private String jurisdiction;
 
     @Value("${migration.caseType}")
     private String caseType;
-
-    @Value("${migration.indexCases}")
-    private boolean indexCases;
 
     private final IdamClient idamClient;
     private final AuthTokenGenerator authTokenGenerator;
