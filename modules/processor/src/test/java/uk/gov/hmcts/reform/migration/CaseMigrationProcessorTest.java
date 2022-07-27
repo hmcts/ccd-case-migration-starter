@@ -1,25 +1,29 @@
 package uk.gov.hmcts.reform.migration;
 
+import static org.codehaus.groovy.runtime.InvokerHelper.asList;
 import static org.hamcrest.Matchers.contains;
-import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.hasSize;
-import static org.junit.Assert.assertEquals;
+import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import org.junit.Ignore;
+
+import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 import uk.gov.hmcts.reform.ccd.client.model.CaseDetails;
+import uk.gov.hmcts.reform.ccd.client.model.SearchResult;
 import uk.gov.hmcts.reform.migration.ccd.CoreCaseDataService;
 import uk.gov.hmcts.reform.migration.service.DataMigrationService;
 
@@ -120,51 +124,104 @@ public class CaseMigrationProcessorTest {
     }
 
     @Test
-    public void shouldContainSingleDate() {
-        String firstDate = "2021-01-01";
-        String lastDate = "2021-01-02";
+    public void shouldDoNothingIfNoCasesToProcess() throws InterruptedException {
+        SearchResult result = SearchResult.builder()
+            .cases(new ArrayList<>())
+            .total(0).build();
 
-        List<LocalDate> listOfDates = caseMigrationProcessor.getListOfDates(LocalDate.parse(firstDate),
-            LocalDate.parse(lastDate));
+        MigrationPageParams pageParams = new MigrationPageParams(10, 10);
 
-        assertEquals(1, listOfDates.size());
+        when(coreCaseDataService.searchCases(anyString(),
+            any(SearchSourceBuilder.class))).thenReturn(result);
+
+        caseMigrationProcessor.fetchAndProcessCases(USER_TOKEN, false, 1, pageParams);
+
+        assertThat(caseMigrationProcessor.getFailedCases().size(), is(0));
+        assertThat(caseMigrationProcessor.getMigratedCases().size(),  is(0));
     }
 
     @Test
-    public void shouldContainTwoDates() {
-        String firstDate = "2021-01-01";
-        String lastDate = "2021-01-03";
+    public void shouldUseOverrideIfProvided() throws InterruptedException {
+        SearchResult result = SearchResult.builder()
+            .cases(List.of(caseDetails1, caseDetails2, caseDetails3))
+            .total(3).build();
 
-        List<LocalDate> listOfDates = caseMigrationProcessor.getListOfDates(LocalDate.parse(firstDate),
-            LocalDate.parse(lastDate));
+        MigrationPageParams pageParams = new MigrationPageParams(10, 2);
 
-        assertEquals(2, listOfDates.size());
+        when(coreCaseDataService.searchCases(anyString(),
+            any(SearchSourceBuilder.class))).thenReturn(result);
+
+        when(coreCaseDataService.fetchNCases(USER_TOKEN, 1,
+            caseDetails1.getId())).thenReturn(List.of(caseDetails2));
+
+        caseMigrationProcessor.fetchAndProcessCases(USER_TOKEN, false, 1, pageParams);
+
+        assertThat(caseMigrationProcessor.getFailedCases().size(), is(0));
+        assertThat(caseMigrationProcessor.getMigratedCases().size(),  is(2));
     }
 
     @Test
-    public void shouldContainNormalYearOfDates() {
-        String firstDate = "2021-01-01";
-        String lastDate = "2022-01-01";
+    public void shouldProcessAllCasesIfNoOverride() throws InterruptedException {
+        SearchResult result = SearchResult.builder()
+            .cases(List.of(caseDetails1, caseDetails2, caseDetails3))
+            .total(3).build();
 
-        List<LocalDate> listOfDates = caseMigrationProcessor.getListOfDates(LocalDate.parse(firstDate),
-            LocalDate.parse(lastDate));
+        MigrationPageParams pageParams = new MigrationPageParams(10, 0);
 
-        assertEquals(365, listOfDates.size());
+        when(coreCaseDataService.searchCases(anyString(),
+            any(SearchSourceBuilder.class))).thenReturn(result);
+
+        when(coreCaseDataService.fetchNCases(USER_TOKEN, 2,
+            caseDetails1.getId())).thenReturn(List.of(caseDetails2, caseDetails3));
+
+        caseMigrationProcessor.fetchAndProcessCases(USER_TOKEN, false, 1, pageParams);
+
+        assertThat(caseMigrationProcessor.getFailedCases().size(), is(0));
+        assertThat(caseMigrationProcessor.getMigratedCases().size(),  is(3));
     }
 
     @Test
-    public void shouldContainLeapYearOfDates() {
-        String firstDate = "2020-01-01";
-        String lastDate = "2021-01-01";
+    public void shouldBreakWhenNoMoreCasesReturned() throws InterruptedException {
+        SearchResult result = SearchResult.builder()
+            .cases(List.of(caseDetails1, caseDetails2, caseDetails3))
+            .total(3).build();
 
-        List<LocalDate> listOfDates = caseMigrationProcessor.getListOfDates(LocalDate.parse(firstDate),
-            LocalDate.parse(lastDate));
+        MigrationPageParams pageParams = new MigrationPageParams(10, 2);
 
-        assertEquals(366, listOfDates.size());
+        when(coreCaseDataService.searchCases(any(String.class),
+            any(SearchSourceBuilder.class))).thenReturn(result);
+
+        caseMigrationProcessor.fetchAndProcessCases(USER_TOKEN, false, 1, pageParams);
+
+        assertThat(caseMigrationProcessor.getFailedCases().size(), is(0));
+        assertThat(caseMigrationProcessor.getMigratedCases().size(),  is(1));
+    }
+
+    @Test
+    public void shouldSearchFromLastCaseInPreviousResult() throws InterruptedException {
+        SearchResult result = SearchResult.builder()
+            .cases(List.of(caseDetails1, caseDetails2, caseDetails3))
+            .total(3).build();
+
+        MigrationPageParams pageParams = new MigrationPageParams(1, 0);
+
+        when(coreCaseDataService.searchCases(any(String.class),
+            any(SearchSourceBuilder.class))).thenReturn(result);
+
+        when(coreCaseDataService.fetchNCases(USER_TOKEN, 1,
+            caseDetails1.getId())).thenReturn(List.of(caseDetails2));
+
+        when(coreCaseDataService.fetchNCases(USER_TOKEN, 1,
+            caseDetails2.getId())).thenReturn(List.of(caseDetails3));
+
+        caseMigrationProcessor.fetchAndProcessCases(USER_TOKEN, false, 1, pageParams);
+
+        assertThat(caseMigrationProcessor.getFailedCases().size(), is(0));
+        assertThat(caseMigrationProcessor.getMigratedCases().size(),  is(3));
     }
 
     private void mockDataFetch(CaseDetails... caseDetails) {
-//        when(coreCaseDataService.fetchAllForDay(eq(USER_TOKEN), anyString(), eq(false))).thenReturn(Optional.of(Stream.of(caseDetails)));
+        when(coreCaseDataService.fetchAll(USER_TOKEN, USER_ID)).thenReturn(asList(caseDetails));
     }
 
     private void mockDataUpdate(CaseDetails caseDetails) {
