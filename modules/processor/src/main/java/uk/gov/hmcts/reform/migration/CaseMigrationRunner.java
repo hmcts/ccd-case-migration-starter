@@ -2,19 +2,20 @@ package uk.gov.hmcts.reform.migration;
 
 import java.util.concurrent.TimeUnit;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.time.StopWatch;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import uk.gov.hmcts.reform.idam.client.IdamClient;
 
-@Slf4j
 @SpringBootApplication
 @RequiredArgsConstructor
 public class CaseMigrationRunner implements CommandLineRunner {
 
+    private final Logger log = LoggerFactory.getLogger("ccd-migration-info");
     @Value("${migration.idam.username}")
     private String idamUsername;
     @Value("${migration.idam.password}")
@@ -29,8 +30,6 @@ public class CaseMigrationRunner implements CommandLineRunner {
     private int maxCasesToProcess;
     @Value("${migration.numThreads}")
     private int numThreads;
-
-
     private final IdamClient idamClient;
     private final CaseMigrationProcessor caseMigrationProcessor;
 
