@@ -1,9 +1,10 @@
 package uk.gov.hmcts.reform.migration;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -11,9 +12,9 @@ import java.util.stream.Collectors;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.time.StopWatch;
-import org.springframework.beans.factory.annotation.Value;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import uk.gov.hmcts.reform.ccd.client.model.CaseDetails;
 import uk.gov.hmcts.reform.ccd.client.model.SearchResult;
@@ -22,10 +23,13 @@ import uk.gov.hmcts.reform.migration.service.DataMigrationService;
 
 import static uk.gov.hmcts.reform.migration.queries.CcdElasticSearchQueries.fetchAllUnsetCaseAccessManagementFieldsCasesQuery;
 
-@Slf4j
 @Component
 @RequiredArgsConstructor
 public class CaseMigrationProcessor {
+
+    private final Logger errorLogger = LoggerFactory.getLogger("ccd-migration-error");
+
+    private final Logger infoLogger = LoggerFactory.getLogger("ccd-migration-info");
 
     private static final String EVENT_ID = "migrateCase";
     private static final String EVENT_SUMMARY = "Migrate Case";
@@ -37,10 +41,10 @@ public class CaseMigrationProcessor {
     private final DataMigrationService<?> dataMigrationService;
 
     @Getter
-    private final List<Long> migratedCases = new ArrayList<>();
+    private final Set<Long> migratedCases = new HashSet<>();
 
     @Getter
-    private final List<Long> failedCases = new ArrayList<>();
+    private final Set<Long> failedCases = new HashSet<>();
 
     @Getter
     private Long totalCases = 0L;
@@ -50,13 +54,13 @@ public class CaseMigrationProcessor {
         try {
             caseDetails = coreCaseDataService.fetchOne(userToken, caseId);
         } catch (Exception ex) {
-            log.error("Case {} not found due to: {}", caseId, ex.getMessage());
+            errorLogger.error("Case {} not found due to: {}", caseId, ex.getMessage());
             return;
         }
         if (dataMigrationService.accepts().test(caseDetails)) {
             updateCase(userToken, caseDetails.getId(), caseDetails.getData(), dryRun);
         } else {
-            log.info("Case {} already migrated", caseDetails.getId());
+            infoLogger.info("Case {} already migrated", caseDetails.getId());
         }
     }
 
@@ -89,10 +93,10 @@ public class CaseMigrationProcessor {
         int totalCasesToProcess = 0;
 
         if (maxCasesToProcess > 0) {
-            log.info("Manual case override in use, limiting to {} cases", maxCasesToProcess);
+            infoLogger.info("Manual case override in use, limiting to {} cases", maxCasesToProcess);
             totalCasesToProcess = maxCasesToProcess;
         } else {
-            log.info("No manual case override in use, fetching all: {} cases", initialSearch.getTotal());
+            infoLogger.info("No manual case override in use, fetching all: {} cases", initialSearch.getTotal());
             totalCasesToProcess = initialSearch.getTotal();
         }
 
@@ -120,11 +124,11 @@ public class CaseMigrationProcessor {
                 .forEach(caseDetail ->
                     updateCase(userToken, caseDetail.getId(), caseDetail.getData(), dryRun)));
 
-            log.info("New task submitted");
+            infoLogger.info("New task submitted");
 
             casesFetched += caseDetails.size();
 
-            log.info("{} cases fetched out of {}", casesFetched, totalCasesToProcess);
+            infoLogger.info("{} cases fetched out of {}", casesFetched, totalCasesToProcess);
         }
     }
 
@@ -137,7 +141,7 @@ public class CaseMigrationProcessor {
     }
 
     private Long handleFirstCase(String userToken, boolean dryRun, SearchResult initialSearch) {
-        log.info("Processing first case...");
+        infoLogger.info("Processing first case...");
         CaseDetails firstCase = initialSearch.getCases().get(0);
         updateCase(userToken, firstCase.getId(), firstCase.getData(), dryRun);
         return firstCase.getId();
@@ -169,17 +173,17 @@ public class CaseMigrationProcessor {
                     EVENT_SUMMARY,
                     EVENT_DESCRIPTION,
                     migratedData);
-                log.info("Case {} successfully updated", id);
+                infoLogger.info("Case {} successfully updated", id);
             }
             migratedCases.add(id);
 
         } catch (Exception e) {
-            log.error("Case {} update failed due to: {}", id, e.getMessage());
+            errorLogger.error("Case {} update failed due to: {}", id, e.getMessage());
             failedCases.add(id);
         }
 
         if (totalCases % 1000 == 0) {
-            log.info("----------{} cases migrated in {} minutes ({} seconds)----------", totalCases,
+            infoLogger.info("----------{} cases migrated in {} minutes ({} seconds)----------", totalCases,
                 totalTimer.getTime(TimeUnit.MINUTES), totalTimer.getTime(TimeUnit.SECONDS));
         }
     }
