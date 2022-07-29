@@ -164,7 +164,7 @@ public class CaseMigrationProcessor {
         totalCases++;
 
         try {
-            var migratedData = dataMigrationService.migrate(data);
+            var migratedData = dataMigrationService.migrate(data, id);
             if (!dryRun) {
                 coreCaseDataService.update(
                     authorisation,
