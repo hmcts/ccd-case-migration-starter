@@ -41,6 +41,10 @@ public class CcdElasticSearchQueries {
 
     public static BoolQueryBuilder unsetCaseAccessManagementFieldsQuery() {
         return QueryBuilders.boolQuery()
+            .must(QueryBuilders.boolQuery()
+                    .should(existsQuery("data.appeal.appellant.address.postcode"))
+                    .should(existsQuery("data.appeal.appellant.appointee.address.postcode"))
+                        .minimumShouldMatch(1))
             .mustNot(
                 QueryBuilders.boolQuery()
                     .should(existsQuery("data.CaseAccessCategory"))
