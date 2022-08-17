@@ -44,7 +44,8 @@ public class CcdElasticSearchQueries {
             .must(QueryBuilders.boolQuery()
                     .should(existsQuery("data.appeal.appellant.address.postcode"))
                     .should(existsQuery("data.appeal.appellant.appointee.address.postcode"))
-                        .minimumShouldMatch(1))
+                        .minimumShouldMatch(1)
+            .must(existsQuery("data.processingVenue")))
             .mustNot(
                 QueryBuilders.boolQuery()
                     .should(existsQuery("data.CaseAccessCategory"))
