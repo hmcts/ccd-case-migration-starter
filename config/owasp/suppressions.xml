@@ -19,7 +19,6 @@
   <!--Please add all the temporary suppression under the below section-->
   <suppress>
     <notes>Temporary Suppression</notes>
-    <cve>CVE-2022-25857</cve>
     <cve>CVE-2020-26939</cve>
     <cve>CVE-2020-15522</cve>
     <cve>CVE-2020-0187</cve>
