@@ -6,5 +6,4 @@ def type = "java"
 def product = "ccd"
 def component = "migration"
 
-
 withPipeline(type, product, component) {}
