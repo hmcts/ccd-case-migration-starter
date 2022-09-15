@@ -212,7 +212,6 @@ dependencies {
   }
 }
 
-mainClassName = 'uk.gov.hmcts.reform.migration.Application'
 
 bootJar {
   archiveFileName = "ccd-migration.jar"
