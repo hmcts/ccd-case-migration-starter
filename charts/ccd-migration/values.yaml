@@ -1,7 +1,7 @@
 java:
   applicationPort: 4999
-  image: 'hmctspublic.azurecr.io/ccd/case-migration-starte:latest'
-  ingressHost: ccd-case-migration-starter-{{ .Values.global.environment }}.service.core-compute-{{ .Values.global.environment }}.internal
+  image: 'hmctspublic.azurecr.io/ccd/migration:latest'
+  ingressHost: ccd-migration-{{ .Values.global.environment }}.service.core-compute-{{ .Values.global.environment }}.internal
   aadIdentityName: ccd
 #  Uncomment once the vault containing the app insights key has been set up
 #  keyVaults:
