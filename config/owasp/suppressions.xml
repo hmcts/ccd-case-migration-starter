@@ -48,6 +48,12 @@
     <cve>CVE-2021-22118</cve>
     <cve>CVE-2022-22970</cve>
     <cve>CVE-2021-22053</cve>
+    <cve>CVE-2021-28170</cve>
+    <cve>CVE-2021-33037</cve>
+    <cve>CVE-2021-42340</cve>
+    <cve>CVE-2022-23181</cve>
+    <cve>CVE-2022-29885</cve>
+    <cve>CVE-2022-34305</cve>
   </suppress>
   <!--End of temporary suppression section -->
 
