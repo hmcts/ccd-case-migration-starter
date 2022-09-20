@@ -1,28 +1,26 @@
 package uk.gov.hmcts.reform.migration.service;
 
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.InjectMocks;
+import org.mockito.junit.MockitoJUnitRunner;
 
 import java.util.HashMap;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.Assert.assertNull;
 
-class DataMigrationServiceImplTest {
+@RunWith(MockitoJUnitRunner.class)
+public class DataMigrationServiceImplTest {
 
-    private DataMigrationServiceImpl service;
-
-    @BeforeEach
-    void setUp() {
-        service = new DataMigrationServiceImpl();
-    }
+    private DataMigrationServiceImpl service = new DataMigrationServiceImpl();
 
     @Test
-    void accepts() {
+    public void shouldReturnNullWhenAccepts() {
         assertNull(service.accepts());
     }
 
     @Test
-    void migrate() {
+    public void shouldReturnNullWhenMigrate() {
         assertNull(service.migrate(new HashMap<>()));
     }
 }
