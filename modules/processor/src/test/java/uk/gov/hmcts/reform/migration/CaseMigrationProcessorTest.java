@@ -7,7 +7,6 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 import uk.gov.hmcts.reform.ccd.client.model.CaseDetails;
 import uk.gov.hmcts.reform.migration.ccd.CoreCaseDataService;
-import uk.gov.hmcts.reform.migration.service.DataMigrationService;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -39,13 +38,10 @@ public class CaseMigrationProcessorTest {
     private CaseMigrationProcessor caseMigrationProcessor;
     @Mock
     private CoreCaseDataService coreCaseDataService;
-    @Mock
-    private DataMigrationService dataMigrationService;
 
     @Test
     public void shouldNotProcessASingleCaseWithOutRedundantFields() {
         when(coreCaseDataService.fetchOne(USER_TOKEN, CASE_ID)).thenReturn(caseDetails1);
-        when(dataMigrationService.accepts()).thenReturn(candidate -> false);
         caseMigrationProcessor.processSingleCase(USER_TOKEN, CASE_ID);
         verify(coreCaseDataService, times(1)).fetchOne(USER_TOKEN, CASE_ID);
         assertThat(caseMigrationProcessor.getFailedCases(), hasSize(0));
@@ -55,7 +51,6 @@ public class CaseMigrationProcessorTest {
     @Test
     public void shouldProcessASingleCaseAndMigrationIsSuccessful() {
         when(coreCaseDataService.fetchOne(USER_TOKEN, CASE_ID)).thenReturn(caseDetails1);
-        when(dataMigrationService.accepts()).thenReturn(candidate -> true);
         caseMigrationProcessor.processSingleCase(USER_TOKEN, CASE_ID);
         verify(coreCaseDataService, times(1)).fetchOne(USER_TOKEN, CASE_ID);
         assertThat(caseMigrationProcessor.getFailedCases(), hasSize(0));
@@ -65,8 +60,6 @@ public class CaseMigrationProcessorTest {
     @Test
     public void shouldProcessASingleCaseAndMigrationIsFailed() {
         when(coreCaseDataService.fetchOne(USER_TOKEN, CASE_ID)).thenReturn(caseDetails1);
-        when(dataMigrationService.accepts()).thenReturn(candidate -> true);
-        when(dataMigrationService.migrate(caseDetails1.getData())).thenReturn(caseDetails1.getData());
         when(coreCaseDataService.update(USER_TOKEN, caseDetails1.getId().toString(), EVENT_ID, EVENT_SUMMARY, EVENT_DESCRIPTION, caseDetails1.getData())).thenThrow(new RuntimeException("Internal server error"));
         caseMigrationProcessor.processSingleCase(USER_TOKEN, CASE_ID);
         verify(coreCaseDataService, times(1)).fetchOne(USER_TOKEN, CASE_ID);
@@ -80,10 +73,6 @@ public class CaseMigrationProcessorTest {
         mockDataFetch(caseDetails1, caseDetails2, caseDetails3);
         mockDataUpdate(caseDetails1);
         mockDataUpdate(caseDetails2);
-        when(dataMigrationService.accepts()).thenReturn(candidate -> true);
-        when(dataMigrationService.migrate(caseDetails1.getData())).thenReturn(caseDetails1.getData());
-        when(dataMigrationService.migrate(caseDetails2.getData())).thenReturn(caseDetails2.getData());
-        when(dataMigrationService.migrate(caseDetails3.getData())).thenReturn(caseDetails3.getData());
         when(coreCaseDataService.update(USER_TOKEN, caseDetails3.getId().toString(), EVENT_ID, EVENT_SUMMARY, EVENT_DESCRIPTION, caseDetails3.getData())).thenThrow(new RuntimeException("Internal server error"));
         caseMigrationProcessor.processAllCases(USER_TOKEN, USER_ID);
         assertThat(caseMigrationProcessor.getFailedCases(), contains(1113L));
@@ -94,10 +83,6 @@ public class CaseMigrationProcessorTest {
     public void shouldProcessAllTheCandidateCases_whenTwoCasesFailed() {
         mockDataFetch(caseDetails1, caseDetails2, caseDetails3);
         mockDataUpdate(caseDetails1);
-        when(dataMigrationService.accepts()).thenReturn(candidate -> true);
-        when(dataMigrationService.migrate(caseDetails1.getData())).thenReturn(caseDetails1.getData());
-        when(dataMigrationService.migrate(caseDetails2.getData())).thenReturn(caseDetails2.getData());
-        when(dataMigrationService.migrate(caseDetails3.getData())).thenReturn(caseDetails3.getData());
         when(coreCaseDataService.update(USER_TOKEN, caseDetails2.getId().toString(), EVENT_ID, EVENT_SUMMARY, EVENT_DESCRIPTION, caseDetails2.getData())).thenThrow(new RuntimeException("Internal server error"));
         when(coreCaseDataService.update(USER_TOKEN, caseDetails3.getId().toString(), EVENT_ID, EVENT_SUMMARY, EVENT_DESCRIPTION, caseDetails3.getData())).thenThrow(new RuntimeException("Internal server error"));
         caseMigrationProcessor.processAllCases(USER_TOKEN, USER_ID);
@@ -109,7 +94,6 @@ public class CaseMigrationProcessorTest {
     public void shouldProcessNoCaseWhenNoCasesAvailable() {
         mockDataFetch();
 
-        when(dataMigrationService.accepts()).thenReturn(candidate -> true);
         caseMigrationProcessor.processAllCases(USER_TOKEN, USER_ID);
         assertThat(caseMigrationProcessor.getFailedCases(), hasSize(0));
         assertThat(caseMigrationProcessor.getFailedCases(), hasSize(0));

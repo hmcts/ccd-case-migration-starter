@@ -7,23 +7,28 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.PropertySource;
-import uk.gov.hmcts.reform.idam.client.IdamClient;
+import uk.gov.hmcts.reform.ccd.client.model.CaseDetails;
+import uk.gov.hmcts.reform.migration.repository.ElasticSearchRepository;
+import uk.gov.hmcts.reform.migration.repository.IdamRepository;
+
+import java.util.List;
 
 @Slf4j
 @SpringBootApplication
 @PropertySource("classpath:application.properties")
 public class CaseMigrationRunner implements CommandLineRunner {
 
-    @Value("${migration.idam.username}")
-    private String idamUsername;
-    @Value("${migration.idam.password}")
-    private String idamPassword;
-    @Value("${migration.caseId}")
-    private String ccdCaseId;
     @Autowired
-    private IdamClient idamClient;
+    private ElasticSearchRepository elasticSearchRepository;
+
     @Autowired
     private CaseMigrationProcessor caseMigrationProcessor;
+
+    @Autowired
+    private IdamRepository idamRepository;
+
+    @Value("${migration.caseType}")
+    private String caseType;
 
     public static void main(String[] args) {
         SpringApplication.run(CaseMigrationRunner.class, args);
@@ -32,27 +37,12 @@ public class CaseMigrationRunner implements CommandLineRunner {
     @Override
     public void run(String... args) {
         try {
-            String userToken = idamClient.authenticateUser(idamUsername, idamPassword);
-            log.debug("User token: {}", userToken);
-            String userId = idamClient.getUserDetails(userToken).getId();
-            log.debug("User ID: {}", userId);
-
-            if (ccdCaseId != null && !ccdCaseId.isBlank()) {
-                log.info("Data migration of single case started");
-                caseMigrationProcessor.processSingleCase(userToken, ccdCaseId);
-            } else {
-                log.info("Data migration of all cases started");
-                caseMigrationProcessor.processAllCases(userToken, userId);
-            }
-
-            log.info("-----------------------------------------");
-            log.info("Data migration completed");
-            log.info("-----------------------------------------");
-            log.info("Total number of processed cases: {}", caseMigrationProcessor.getMigratedCases().size() + caseMigrationProcessor.getFailedCases().size());
-            log.info("Total number of migrations performed: {}", caseMigrationProcessor.getMigratedCases().size());
-            log.info("-----------------------------------------");
-            log.info("Migrated cases: {} ", !caseMigrationProcessor.getMigratedCases().isEmpty() ? caseMigrationProcessor.getMigratedCases() : "NONE");
-            log.info("Failed cases: {}", !caseMigrationProcessor.getFailedCases().isEmpty() ? caseMigrationProcessor.getFailedCases() : "NONE");
+            log.info("Data migration of all cases started");
+            String userToken =  idamRepository.generateUserToken();
+            List<CaseDetails> listOfCaseDetails = elasticSearchRepository.findCasesWithOutHmctsSServiceId(userToken, caseType);
+            listOfCaseDetails.stream()
+                    .forEach(caseDetails -> caseMigrationProcessor.processCaseDetails(userToken, caseDetails));
+            log.info("Data migration of all cases completed");
         } catch (Throwable e) {
             log.error("Migration failed with the following reason: {}", e.getMessage(), e);
         }
