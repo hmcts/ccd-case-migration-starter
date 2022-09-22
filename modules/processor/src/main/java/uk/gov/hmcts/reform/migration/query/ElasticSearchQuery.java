@@ -6,49 +6,18 @@ import lombok.Builder;
 public class ElasticSearchQuery {
 
     private static final String START_QUERY = "{\n" +
+        "  \"query\": {\n" +
+        "    \"match_all\": {}\n" +
+        "  },\n" +
         "  \"_source\": [\n" +
         "    \"reference\"\n" +
         "  ],\n" +
-        "  \"query\": {\n" +
-        "    \"bool\": {\n" +
-        "      \"filter\": [\n" +
-        "        {\n" +
-        "          \"bool\": {\n" +
-        "            \"should\": [\n" +
-        "              {\n" +
-        "                \"bool\": {\n" +
-        "                  \"must_not\": [\n" +
-        "                    {\n" +
-        "                      \"exists\": {\n" +
-        "                        \"field\": \"supplementary_data.HMCTSServiceId\"\n" +
-        "                      }\n" +
-        "                    }\n" +
-        "                  ]\n" +
-        "                }\n" +
-        "              },\n" +
-        "              {\n" +
-        "                \"bool\": {\n" +
-        "                  \"must_not\": [\n" +
-        "                    {\n" +
-        "                      \"exists\": {\n" +
-        "                        \"field\": \"supplementary_data\"\n" +
-        "                      }\n" +
-        "                    }\n" +
-        "                  ]\n" +
-        "                }\n" +
-        "              }\n" +
-        "            ]\n" +
-        "          }\n" +
-        "        }\n" +
-        "      ]\n" +
-        "    }\n" +
-        "  },\n" +
+        "  \"size\": %s,\n" +
         "  \"sort\": [\n" +
         "    {\n" +
         "      \"reference.keyword\": \"asc\"\n" +
         "    }\n" +
-        "  ],\n" +
-        "  \"size\": %s";
+        "  ]\n";
 
     private static final String END_QUERY = "\n}";
 
