@@ -215,7 +215,7 @@ dependencies {
     exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'
   }
 
-  testCompile 'com.github.hmcts:fortify-client:1.2.2:all'
+  testImplementation 'com.github.hmcts:fortify-client:1.2.2:all'
 
   implementation project('modules:domain')
   implementation project('modules:processor')
