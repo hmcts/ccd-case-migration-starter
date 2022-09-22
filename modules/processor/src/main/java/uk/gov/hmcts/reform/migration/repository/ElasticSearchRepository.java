@@ -21,26 +21,28 @@ public class ElasticSearchRepository {
 
     private final AuthTokenGenerator authTokenGenerator;
 
-    @Value("${case-migration.elasticsearch.querySize}")
     private int querySize;
 
     @Autowired
     public ElasticSearchRepository(CoreCaseDataApi coreCaseDataApi,
-                                   AuthTokenGenerator authTokenGenerator) {
+                                   AuthTokenGenerator authTokenGenerator,
+                                   @Value("${case-migration.elasticsearch.querySize}") int querySize) {
         this.coreCaseDataApi = coreCaseDataApi;
         this.authTokenGenerator = authTokenGenerator;
+        this.querySize = querySize;
     }
 
-    public List<CaseDetails> findCasesWithOutHmctsSServiceId(String userToken, String caseType) {
+    public List<CaseDetails> findCaseByCaseType(String userToken, String caseType) {
         ElasticSearchQuery elasticSearchQuery = ElasticSearchQuery.builder()
             .initialSearch(true)
             .size(querySize)
             .build();
 
         log.info("Processing the Case Migration search for case type {}.", caseType);
+        String authToken = authTokenGenerator.generate();
 
         SearchResult searchResult = coreCaseDataApi.searchCases(userToken,
-                                                                authTokenGenerator.generate(),
+                                                                authToken,
                                                                 caseType, elasticSearchQuery.getQuery()
         );
 
@@ -63,7 +65,7 @@ public class ElasticSearchRepository {
 
                 SearchResult subsequentSearchResult =
                     coreCaseDataApi.searchCases(userToken,
-                                                authTokenGenerator.generate(),
+                                                authToken,
                                                 caseType, subsequentElasticSearchQuery.getQuery()
                     );
 
