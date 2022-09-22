@@ -133,7 +133,7 @@ sonarqube {
   properties {
     property "sonar.projectName", "ccd-case-migration-starter"
     property "sonar.projectKey", "ccd-case-migration-starter"
-    property "sonar.exclusions", "**/migration/*.java,**/query/*.java,**/repository/*.java"
+    property "sonar.exclusions", "**/migration/*.java,**/query/*.java,**/repository/*.java,**/service/*.java"
     property "sonar.coverage.jacoco.xmlReportPaths", "${jacocoTestReport.reports.xml.destination.path}"
   }
 }

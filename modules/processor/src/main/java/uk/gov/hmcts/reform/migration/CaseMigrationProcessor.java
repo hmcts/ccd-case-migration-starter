@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import uk.gov.hmcts.reform.ccd.client.model.CaseDetails;
 import uk.gov.hmcts.reform.migration.ccd.CoreCaseDataService;
+import uk.gov.hmcts.reform.migration.service.DataMigrationService;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -21,6 +22,9 @@ public class CaseMigrationProcessor {
     @Autowired
     private CoreCaseDataService coreCaseDataService;
 
+    @Autowired
+    private DataMigrationService dataMigrationService;
+
     @Getter
     private List<Long> migratedCases = new ArrayList<>();
 
@@ -35,7 +39,11 @@ public class CaseMigrationProcessor {
             log.error("Case {} not found due to: {}", caseId, ex.getMessage());
             return;
         }
-        updateCase(userToken, caseDetails.getId(), caseDetails.getData());
+        if (dataMigrationService.accepts().test(caseDetails)) {
+            updateCase(userToken, caseDetails.getId(), caseDetails.getData());
+        } else {
+            log.info("Case {} already migrated", caseDetails.getId());
+        }
     }
 
     public void processCaseDetails(String userToken, CaseDetails caseDetails) {
