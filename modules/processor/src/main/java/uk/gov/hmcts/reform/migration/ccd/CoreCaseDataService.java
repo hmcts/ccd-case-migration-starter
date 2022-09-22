@@ -23,10 +23,6 @@ import java.util.stream.IntStream;
 @Service
 public class CoreCaseDataService {
 
-    private String jurisdiction;
-    @Value("${migration.caseType}")
-    private String caseType;
-
     @Autowired
     private IdamClient idamClient;
     @Autowired
@@ -38,34 +34,35 @@ public class CoreCaseDataService {
         return coreCaseDataApi.getCase(authorisation, authTokenGenerator.generate(), caseId);
     }
 
-    public List<CaseDetails> fetchAll(String authorisation, String userId) {
-        int numberOfPages = getNumberOfPages(authorisation, userId, new HashMap<>());
+    public List<CaseDetails> fetchAll(String authorisation, String userId, String caseType) {
+        int numberOfPages = getNumberOfPages(authorisation, userId, caseType, new HashMap<>());
         return IntStream.rangeClosed(1, numberOfPages).boxed()
-            .flatMap(pageNumber -> fetchPage(authorisation, userId, pageNumber).stream())
+            .flatMap(pageNumber -> fetchPage(authorisation, userId, caseType, pageNumber).stream())
             .collect(Collectors.toList());
     }
 
-    private int getNumberOfPages(String authorisation, String userId, Map<String, String> searchCriteria) {
+    private int getNumberOfPages(String authorisation, String userId,  String caseType, Map<String, String> searchCriteria) {
         PaginatedSearchMetadata metadata = coreCaseDataApi.getPaginationInfoForSearchForCaseworkers(authorisation,
-            authTokenGenerator.generate(), userId, jurisdiction, caseType, searchCriteria);
+            authTokenGenerator.generate(), userId, null, caseType, searchCriteria);
         return metadata.getTotalPagesCount();
     }
 
-    private List<CaseDetails> fetchPage(String authorisation, String userId, int pageNumber) {
+    private List<CaseDetails> fetchPage(String authorisation, String userId,  String caseType, int pageNumber) {
         Map<String, String> searchCriteria = new HashMap<>();
         searchCriteria.put("page", String.valueOf(pageNumber));
-        return coreCaseDataApi.searchForCaseworker(authorisation, authTokenGenerator.generate(), userId, jurisdiction,
+        return coreCaseDataApi.searchForCaseworker(authorisation, authTokenGenerator.generate(), userId, null,
             caseType, searchCriteria);
     }
 
-    public CaseDetails update(String authorisation, String caseId, String eventId, String eventSummary, String eventDescription, Object data) {
+    public CaseDetails update(String authorisation, String eventId, String eventSummary, String eventDescription, String caseType, CaseDetails caseDetails) {
+        String caseId = String.valueOf(caseDetails.getId());
         UserDetails userDetails = idamClient.getUserDetails(AuthUtil.getBearerToken(authorisation));
 
         StartEventResponse startEventResponse = coreCaseDataApi.startEventForCaseWorker(
             AuthUtil.getBearerToken(authorisation),
             authTokenGenerator.generate(),
             userDetails.getId(),
-            jurisdiction,
+            null,
             caseType,
             caseId,
             eventId);
@@ -78,14 +75,14 @@ public class CoreCaseDataService {
                     .summary(eventSummary)
                     .description(eventDescription)
                     .build()
-            ).data(data)
+            ).data(caseDetails.getData())
             .build();
 
         return coreCaseDataApi.submitEventForCaseWorker(
             AuthUtil.getBearerToken(authorisation),
             authTokenGenerator.generate(),
             userDetails.getId(),
-            jurisdiction,
+            null,
             caseType,
             caseId,
             true,

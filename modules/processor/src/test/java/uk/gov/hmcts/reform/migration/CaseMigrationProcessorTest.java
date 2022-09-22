@@ -30,6 +30,7 @@ public class CaseMigrationProcessorTest {
     private static final String EVENT_ID = "migrateCase";
     private static final String EVENT_SUMMARY = "Migrate Case";
     private static final String EVENT_DESCRIPTION = "Migrate Case";
+    private static final String CASE_TYPE = "Test_Case_Type";
 
     private final CaseDetails caseDetails1 = createCaseDetails(1111L, "case-1");
     private final CaseDetails caseDetails2 = createCaseDetails(1112L, "case-2");
@@ -66,12 +67,13 @@ public class CaseMigrationProcessorTest {
 
     @Test
     public void shouldProcessASingleCaseAndMigrationIsFailed() {
+        caseDetails1.setCaseTypeId(CASE_TYPE);
         when(coreCaseDataService.fetchOne(USER_TOKEN, CASE_ID)).thenReturn(caseDetails1);
         when(dataMigrationService.accepts()).thenReturn(candidate -> true);
-        when(coreCaseDataService.update(USER_TOKEN, caseDetails1.getId().toString(), EVENT_ID, EVENT_SUMMARY, EVENT_DESCRIPTION, caseDetails1.getData())).thenThrow(new RuntimeException("Internal server error"));
+        when(coreCaseDataService.update(USER_TOKEN, EVENT_ID, EVENT_SUMMARY, EVENT_DESCRIPTION, CASE_TYPE, caseDetails1)).thenThrow(new RuntimeException("Internal server error"));
         caseMigrationProcessor.processSingleCase(USER_TOKEN, CASE_ID);
         verify(coreCaseDataService, times(1)).fetchOne(USER_TOKEN, CASE_ID);
-        verify(coreCaseDataService, times(1)).update(USER_TOKEN, "1111", EVENT_ID, EVENT_SUMMARY, EVENT_DESCRIPTION, caseDetails1.getData());
+        verify(coreCaseDataService, times(1)).update(USER_TOKEN, EVENT_ID, EVENT_SUMMARY, EVENT_DESCRIPTION, CASE_TYPE, caseDetails1);
         assertThat(caseMigrationProcessor.getFailedCases(), contains(1111L));
         assertThat(caseMigrationProcessor.getMigratedCases(), hasSize(0));
     }
@@ -81,8 +83,9 @@ public class CaseMigrationProcessorTest {
         mockDataFetch(caseDetails1, caseDetails2, caseDetails3);
         mockDataUpdate(caseDetails1);
         mockDataUpdate(caseDetails2);
-        when(coreCaseDataService.update(USER_TOKEN, caseDetails3.getId().toString(), EVENT_ID, EVENT_SUMMARY, EVENT_DESCRIPTION, caseDetails3.getData())).thenThrow(new RuntimeException("Internal server error"));
-        caseMigrationProcessor.processAllCases(USER_TOKEN, USER_ID);
+        when(dataMigrationService.accepts()).thenReturn(candidate -> true);
+        when(coreCaseDataService.update(USER_TOKEN, EVENT_ID, EVENT_SUMMARY, EVENT_DESCRIPTION, CASE_TYPE, caseDetails3)).thenThrow(new RuntimeException("Internal server error"));
+        caseMigrationProcessor.processAllCases(USER_TOKEN, USER_ID, CASE_TYPE);
         assertThat(caseMigrationProcessor.getFailedCases(), contains(1113L));
         assertThat(caseMigrationProcessor.getMigratedCases(), contains(1111L, 1112L));
     }
@@ -91,9 +94,10 @@ public class CaseMigrationProcessorTest {
     public void shouldProcessAllTheCandidateCases_whenTwoCasesFailed() {
         mockDataFetch(caseDetails1, caseDetails2, caseDetails3);
         mockDataUpdate(caseDetails1);
-        when(coreCaseDataService.update(USER_TOKEN, caseDetails2.getId().toString(), EVENT_ID, EVENT_SUMMARY, EVENT_DESCRIPTION, caseDetails2.getData())).thenThrow(new RuntimeException("Internal server error"));
-        when(coreCaseDataService.update(USER_TOKEN, caseDetails3.getId().toString(), EVENT_ID, EVENT_SUMMARY, EVENT_DESCRIPTION, caseDetails3.getData())).thenThrow(new RuntimeException("Internal server error"));
-        caseMigrationProcessor.processAllCases(USER_TOKEN, USER_ID);
+        when(dataMigrationService.accepts()).thenReturn(candidate -> true);
+        when(coreCaseDataService.update(USER_TOKEN, EVENT_ID, EVENT_SUMMARY, EVENT_DESCRIPTION, CASE_TYPE, caseDetails2)).thenThrow(new RuntimeException("Internal server error"));
+        when(coreCaseDataService.update(USER_TOKEN, EVENT_ID, EVENT_SUMMARY, EVENT_DESCRIPTION, CASE_TYPE, caseDetails3)).thenThrow(new RuntimeException("Internal server error"));
+        caseMigrationProcessor.processAllCases(USER_TOKEN, USER_ID, CASE_TYPE);
         assertThat(caseMigrationProcessor.getFailedCases(), contains(1112L, 1113L));
         assertThat(caseMigrationProcessor.getMigratedCases(), contains(1111L));
     }
@@ -102,18 +106,18 @@ public class CaseMigrationProcessorTest {
     public void shouldProcessNoCaseWhenNoCasesAvailable() {
         mockDataFetch();
 
-        caseMigrationProcessor.processAllCases(USER_TOKEN, USER_ID);
+        caseMigrationProcessor.processAllCases(USER_TOKEN, USER_ID, CASE_TYPE);
         assertThat(caseMigrationProcessor.getFailedCases(), hasSize(0));
         assertThat(caseMigrationProcessor.getFailedCases(), hasSize(0));
     }
 
     private void mockDataFetch(CaseDetails... caseDetails) {
-        when(coreCaseDataService.fetchAll(USER_TOKEN, USER_ID)).thenReturn(asList(caseDetails));
+        when(coreCaseDataService.fetchAll(USER_TOKEN, USER_ID, CASE_TYPE)).thenReturn(asList(caseDetails));
     }
 
     private void mockDataUpdate(CaseDetails caseDetails) {
-        when(coreCaseDataService.update(USER_TOKEN, caseDetails.getId().toString(),
-            EVENT_ID, EVENT_SUMMARY, EVENT_DESCRIPTION, caseDetails.getData()
+        when(coreCaseDataService.update(USER_TOKEN,
+            EVENT_ID, EVENT_SUMMARY, EVENT_DESCRIPTION, CASE_TYPE, caseDetails
         )).thenReturn(caseDetails);
     }
 

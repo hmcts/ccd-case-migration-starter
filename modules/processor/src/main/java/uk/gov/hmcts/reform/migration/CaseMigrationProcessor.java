@@ -39,9 +39,6 @@ public class CaseMigrationProcessor {
     @Getter
     private List<Long> failedCases = new ArrayList<>();
 
-    @Value("${migration.caseType}")
-    private String caseType;
-
     public void processSingleCase(String userToken, String caseId) {
         CaseDetails caseDetails;
         try {
@@ -50,20 +47,20 @@ public class CaseMigrationProcessor {
             log.error("Case {} not found due to: {}", caseId, ex.getMessage());
             return;
         }
-        updateCase(userToken, caseDetails);
+        updateCase(userToken, caseDetails.getCaseTypeId(), caseDetails);
     }
 
-    public void processAllCases(String userToken, String userId) {
-        coreCaseDataService.fetchAll(userToken, userId).stream()
-            .forEach(caseDetails -> updateCase(userToken, caseDetails));
+    public void processAllCases(String userToken, String userId, String caseType) {
+        coreCaseDataService.fetchAll(userToken, userId, caseType).stream()
+            .forEach(caseDetails -> updateCase(userToken, caseType, caseDetails));
     }
 
-    public void migrateCases() {
+    public void migrateCases(String caseType) {
         log.info("Data migration of all cases started for case type: {}", caseType);
         String userToken =  idamRepository.generateUserToken();
         List<CaseDetails> listOfCaseDetails = elasticSearchRepository.findCasesWithOutHmctsSServiceId(userToken, caseType);
         listOfCaseDetails.stream()
-            .forEach(caseDetails -> updateCase(userToken, caseDetails));
+            .forEach(caseDetails -> updateCase(userToken, caseType, caseDetails));
         log.info("-----------------------------------------");
         log.info("Data migration completed");
         log.info("-----------------------------------------");
@@ -75,7 +72,7 @@ public class CaseMigrationProcessor {
         log.info("Data migration of all cases completed");
     }
 
-    private void updateCase(String authorisation, CaseDetails caseDetails) {
+    private void updateCase(String authorisation, String caseType, CaseDetails caseDetails) {
         if (dataMigrationService.accepts().test(caseDetails)) {
             Long id = caseDetails.getId();
             log.info("Updating case {}", id);
@@ -83,11 +80,11 @@ public class CaseMigrationProcessor {
                 log.debug("Case data: {}", caseDetails.getData());
                 coreCaseDataService.update(
                     authorisation,
-                    id.toString(),
                     EVENT_ID,
                     EVENT_SUMMARY,
                     EVENT_DESCRIPTION,
-                    caseDetails.getData()
+                    caseType,
+                    caseDetails
                 );
                 log.info("Case {} successfully updated", id);
                 migratedCases.add(id);
