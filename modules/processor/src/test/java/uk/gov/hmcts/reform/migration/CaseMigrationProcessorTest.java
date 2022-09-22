@@ -40,12 +40,11 @@ public class CaseMigrationProcessorTest {
     private CoreCaseDataService coreCaseDataService;
 
     @Test
-    public void shouldNotProcessASingleCaseWithOutRedundantFields() {
+    public void shouldProcessASingleCaseWithOutRedundantFields() {
         when(coreCaseDataService.fetchOne(USER_TOKEN, CASE_ID)).thenReturn(caseDetails1);
         caseMigrationProcessor.processSingleCase(USER_TOKEN, CASE_ID);
         verify(coreCaseDataService, times(1)).fetchOne(USER_TOKEN, CASE_ID);
-        assertThat(caseMigrationProcessor.getFailedCases(), hasSize(0));
-        assertThat(caseMigrationProcessor.getMigratedCases(), hasSize(0));
+        assertThat(caseMigrationProcessor.getMigratedCases(), hasSize(1));
     }
 
     @Test
