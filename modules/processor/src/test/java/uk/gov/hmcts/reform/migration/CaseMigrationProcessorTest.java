@@ -7,15 +7,21 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 import uk.gov.hmcts.reform.ccd.client.model.CaseDetails;
 import uk.gov.hmcts.reform.migration.ccd.CoreCaseDataService;
+import uk.gov.hmcts.reform.migration.repository.ElasticSearchRepository;
+import uk.gov.hmcts.reform.migration.repository.IdamRepository;
 import uk.gov.hmcts.reform.migration.service.DataMigrationService;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import static java.util.Arrays.asList;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.hasSize;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -44,6 +50,12 @@ public class CaseMigrationProcessorTest {
 
     @Mock
     private DataMigrationService dataMigrationService;
+
+    @Mock
+    private ElasticSearchRepository elasticSearchRepository;
+
+    @Mock
+    private IdamRepository idamRepository;
 
     @Test
     public void shouldNotProcessASingleCaseWithOutRedundantFields() {
@@ -109,6 +121,22 @@ public class CaseMigrationProcessorTest {
         caseMigrationProcessor.processAllCases(USER_TOKEN, USER_ID, CASE_TYPE);
         assertThat(caseMigrationProcessor.getFailedCases(), hasSize(0));
         assertThat(caseMigrationProcessor.getFailedCases(), hasSize(0));
+    }
+
+    @Test
+    public void shouldMigrateCasesOfACaseType() {
+        when(dataMigrationService.accepts()).thenReturn(candidate -> true);
+        when(idamRepository.generateUserToken()).thenReturn(USER_TOKEN);
+        CaseDetails details = mock(CaseDetails.class);
+        when(details.getId()).thenReturn(1677777777L);
+        List<CaseDetails> caseDetails = new ArrayList<>();
+        caseDetails.add(details);
+        when(elasticSearchRepository.findCaseByCaseType(USER_TOKEN, CASE_TYPE)).thenReturn(caseDetails);
+        List<CaseDetails> listOfCaseDetails = elasticSearchRepository.findCaseByCaseType(USER_TOKEN, CASE_TYPE);
+        assertNotNull(listOfCaseDetails);
+        when(coreCaseDataService.update(USER_TOKEN, EVENT_ID, EVENT_SUMMARY, EVENT_DESCRIPTION, CASE_TYPE, details)).thenReturn(details);
+        caseMigrationProcessor.migrateCases(CASE_TYPE);
+        verify(coreCaseDataService, times(1)).update(USER_TOKEN, EVENT_ID, EVENT_SUMMARY, EVENT_DESCRIPTION, CASE_TYPE, details);
     }
 
     private void mockDataFetch(CaseDetails... caseDetails) {
