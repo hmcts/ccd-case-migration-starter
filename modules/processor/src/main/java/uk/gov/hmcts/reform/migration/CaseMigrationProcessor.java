@@ -12,6 +12,7 @@ import uk.gov.hmcts.reform.migration.service.DataMigrationService;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @Component
@@ -19,12 +20,13 @@ public class CaseMigrationProcessor {
     private static final String EVENT_ID = "migrateCase";
     private static final String EVENT_SUMMARY = "Migrate Case";
     private static final String EVENT_DESCRIPTION = "Migrate Case";
+    public static final String LOG_STRING = "-----------------------------------------";
 
     @Autowired
     private CoreCaseDataService coreCaseDataService;
 
     @Autowired
-    private DataMigrationService dataMigrationService;
+    private DataMigrationService<Map<String, Object>> dataMigrationService;
 
     @Autowired
     private ElasticSearchRepository elasticSearchRepository;
@@ -60,12 +62,12 @@ public class CaseMigrationProcessor {
         List<CaseDetails> listOfCaseDetails = elasticSearchRepository.findCaseByCaseType(userToken, caseType);
         listOfCaseDetails.stream()
             .forEach(caseDetails -> updateCase(userToken, caseType, caseDetails));
-        log.info("-----------------------------------------");
+        log.info(LOG_STRING);
         log.info("Data migration completed");
-        log.info("-----------------------------------------");
+        log.info(LOG_STRING);
         log.info("Total number of processed cases: {}", getMigratedCases().size() + getFailedCases().size());
         log.info("Total number of migrations performed: {}", getMigratedCases().size());
-        log.info("-----------------------------------------");
+        log.info(LOG_STRING);
         log.info("Migrated cases: {} ", !getMigratedCases().isEmpty() ? getMigratedCases() : "NONE");
         log.info("Failed cases: {}", !getFailedCases().isEmpty() ? getFailedCases() : "NONE");
         log.info("Data migration of all cases completed");

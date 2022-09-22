@@ -70,7 +70,7 @@ public class ElasticSearchRepository {
                     );
 
                 caseDetails.addAll(subsequentSearchResult.getCases());
-                keepSearching = subsequentSearchResult.getCases().size() > 0;
+                keepSearching = !subsequentSearchResult.getCases().isEmpty();
                 if (keepSearching) {
                     searchAfterValue = subsequentSearchResult.getCases()
                         .get(subsequentSearchResult.getCases().size() - 1)
