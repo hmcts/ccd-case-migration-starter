@@ -134,8 +134,6 @@ sonarqube {
     property "sonar.projectName", "ccd-case-migration-starter"
     property "sonar.projectKey", "ccd-case-migration-starter"
     property "sonar.coverage.jacoco.xmlReportPaths", "${jacocoTestReport.reports.xml.destination.path}"
-    property "sonar.exclusions", "**/processor/*.java"
-    property "sonar.coverage.exclusions", "**/processor/*.java"
   }
 }
 
@@ -308,4 +306,14 @@ subprojects {
       }
     }
   }
+
+  afterEvaluate {
+    jacocoTestReport {
+      reports {
+        xml.enabled true
+        html.enabled true
+      }
+    }
+  }
+  check.dependsOn jacocoTestReport
 }
