@@ -23,7 +23,6 @@ import java.util.stream.IntStream;
 @Service
 public class CoreCaseDataService {
 
-    @Value("${migration.jurisdiction}")
     private String jurisdiction;
     @Value("${migration.caseType}")
     private String caseType;
