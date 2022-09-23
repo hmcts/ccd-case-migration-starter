@@ -29,30 +29,6 @@ public class CoreCaseDataService {
     @Autowired
     private CoreCaseDataApi coreCaseDataApi;
 
-    public CaseDetails fetchOne(String authorisation, String caseId) {
-        return coreCaseDataApi.getCase(authorisation, authTokenGenerator.generate(), caseId);
-    }
-
-    public List<CaseDetails> fetchAll(String authorisation, String userId, String caseType) {
-        int numberOfPages = getNumberOfPages(authorisation, userId, caseType, new HashMap<>());
-        return IntStream.rangeClosed(1, numberOfPages).boxed()
-            .flatMap(pageNumber -> fetchPage(authorisation, userId, caseType, pageNumber).stream())
-            .collect(Collectors.toList());
-    }
-
-    private int getNumberOfPages(String authorisation, String userId,  String caseType, Map<String, String> searchCriteria) {
-        PaginatedSearchMetadata metadata = coreCaseDataApi.getPaginationInfoForSearchForCaseworkers(authorisation,
-            authTokenGenerator.generate(), userId, null, caseType, searchCriteria);
-        return metadata.getTotalPagesCount();
-    }
-
-    private List<CaseDetails> fetchPage(String authorisation, String userId,  String caseType, int pageNumber) {
-        Map<String, String> searchCriteria = new HashMap<>();
-        searchCriteria.put("page", String.valueOf(pageNumber));
-        return coreCaseDataApi.searchForCaseworker(authorisation, authTokenGenerator.generate(), userId, null,
-            caseType, searchCriteria);
-    }
-
     public CaseDetails update(String authorisation, String eventId, String eventSummary, String eventDescription, String caseType, CaseDetails caseDetails) {
         String caseId = String.valueOf(caseDetails.getId());
         UserDetails userDetails = idamClient.getUserDetails(AuthUtil.getBearerToken(authorisation));
@@ -61,7 +37,7 @@ public class CoreCaseDataService {
             AuthUtil.getBearerToken(authorisation),
             authTokenGenerator.generate(),
             userDetails.getId(),
-            null,
+            caseDetails.getJurisdiction(),
             caseType,
             caseId,
             eventId);
@@ -81,7 +57,7 @@ public class CoreCaseDataService {
             AuthUtil.getBearerToken(authorisation),
             authTokenGenerator.generate(),
             userDetails.getId(),
-            null,
+            caseDetails.getJurisdiction(),
             caseType,
             caseId,
             true,

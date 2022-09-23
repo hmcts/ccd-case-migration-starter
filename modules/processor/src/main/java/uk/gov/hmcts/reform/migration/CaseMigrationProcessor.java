@@ -40,22 +40,6 @@ public class CaseMigrationProcessor {
     @Getter
     private List<Long> failedCases = new ArrayList<>();
 
-    public void processSingleCase(String userToken, String caseId) {
-        CaseDetails caseDetails;
-        try {
-            caseDetails = coreCaseDataService.fetchOne(userToken, caseId);
-        } catch (Exception ex) {
-            log.error("Case {} not found due to: {}", caseId, ex.getMessage());
-            return;
-        }
-        updateCase(userToken, caseDetails.getCaseTypeId(), caseDetails);
-    }
-
-    public void processAllCases(String userToken, String userId, String caseType) {
-        coreCaseDataService.fetchAll(userToken, userId, caseType).stream()
-            .forEach(caseDetails -> updateCase(userToken, caseType, caseDetails));
-    }
-
     public void migrateCases(String caseType) {
         log.info("Data migration of all cases started for case type: {}", caseType);
         String userToken =  idamRepository.generateUserToken();
@@ -94,7 +78,7 @@ public class CaseMigrationProcessor {
                 failedCases.add(id);
             }
         } else {
-            log.info("Case {} already migrated", caseDetails.getId());
+            log.info("Case {} does not meet criteria for migration", caseDetails.getId());
         }
     }
 }
