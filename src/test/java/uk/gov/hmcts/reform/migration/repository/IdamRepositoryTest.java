@@ -18,7 +18,7 @@ import static org.mockito.Mockito.when;
 public class IdamRepositoryTest {
 
     private static final String IDAM_USER_NAME = "User123";
-    private static final String IDAM_PASS= "Pass";
+    private static final String IDAM_PASS = "Pass";
 
     private IdamRepository idamRepository;
 

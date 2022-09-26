@@ -61,8 +61,8 @@ public class CoreCaseDataServiceTest {
             .surname("Surname")
             .build();
 
-       CaseDetails caseDetails3 = createCaseDetails(CASE_ID, "case-3");
-       setupMocks(userDetails, caseDetails3.getData());
+        CaseDetails caseDetails3 = createCaseDetails(CASE_ID, "case-3");
+        setupMocks(userDetails, caseDetails3.getData());
 
         //when
         CaseDetails update = underTest.update(AUTH_TOKEN, EVENT_ID, EVENT_SUMMARY, EVENT_DESC, CASE_TYPE, caseDetails3);
@@ -101,15 +101,16 @@ public class CoreCaseDataServiceTest {
             .build();
 
         when(coreCaseDataApi.startEventForCaseWorker(AUTH_TOKEN, AUTH_TOKEN, "30",
-            null, CASE_TYPE, CASE_ID, EVENT_ID))
+                                                     null, CASE_TYPE, CASE_ID, EVENT_ID
+        ))
             .thenReturn(startEventResponse);
 
         CaseDataContent caseDataContent = CaseDataContent.builder()
             .event(Event.builder()
-                .id(EVENT_ID)
-                .description(EVENT_DESC)
-                .summary(EVENT_SUMMARY)
-                .build())
+                       .id(EVENT_ID)
+                       .description(EVENT_DESC)
+                       .summary(EVENT_SUMMARY)
+                       .build())
             .eventToken(EVENT_TOKEN)
             .data(data)
             .ignoreWarning(false)
@@ -120,6 +121,7 @@ public class CoreCaseDataServiceTest {
             .data(data)
             .build();
         when(coreCaseDataApi.submitEventForCaseWorker(AUTH_TOKEN, AUTH_TOKEN, USER_ID, null,
-            CASE_TYPE, CASE_ID, true, caseDataContent)).thenReturn(caseDetails);
+                                                      CASE_TYPE, CASE_ID, true, caseDataContent
+        )).thenReturn(caseDetails);
     }
 }

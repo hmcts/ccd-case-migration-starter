@@ -8,7 +8,8 @@ import uk.gov.hmcts.reform.domain.common.Party;
 @Data
 @Builder
 @AllArgsConstructor
-public class Respondent<PARTY extends Party> {
-    private final PARTY party;
+@SuppressWarnings("ClassTypeParameterName")
+public class Respondent<P extends Party> {
+    private final P party;
     private final String leadRespondentIndicator;
 }

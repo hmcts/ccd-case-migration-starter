@@ -56,8 +56,16 @@ public class CaseMigrationProcessorTest {
         when(elasticSearchRepository.findCaseByCaseType(USER_TOKEN, CASE_TYPE)).thenReturn(caseDetails);
         List<CaseDetails> listOfCaseDetails = elasticSearchRepository.findCaseByCaseType(USER_TOKEN, CASE_TYPE);
         assertNotNull(listOfCaseDetails);
-        when(coreCaseDataService.update(USER_TOKEN, EVENT_ID, EVENT_SUMMARY, EVENT_DESCRIPTION, CASE_TYPE, details)).thenReturn(details);
+        when(coreCaseDataService.update(USER_TOKEN, EVENT_ID, EVENT_SUMMARY,
+                                        EVENT_DESCRIPTION, CASE_TYPE, details))
+            .thenReturn(details);
         caseMigrationProcessor.migrateCases(CASE_TYPE);
-        verify(coreCaseDataService, times(1)).update(USER_TOKEN, EVENT_ID, EVENT_SUMMARY, EVENT_DESCRIPTION, CASE_TYPE, details);
+        verify(coreCaseDataService, times(1))
+            .update(USER_TOKEN,
+                    EVENT_ID,
+                    EVENT_SUMMARY,
+                    EVENT_DESCRIPTION,
+                    CASE_TYPE,
+                    details);
     }
 }

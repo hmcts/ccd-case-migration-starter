@@ -12,9 +12,9 @@ public class IdamRepository {
 
     private final IdamClient idamClient;
 
-    private String idamUsername;
+    private final String idamUsername;
 
-    private String idamPassword;
+    private final String idamPassword;
 
     @Autowired
     public IdamRepository(@Value("${migration.idam.username}") String idamUsername,

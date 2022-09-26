@@ -19,21 +19,21 @@ public class ElasticSearchQueryTest {
             .size(QUERY_SIZE)
             .build();
         String query = elasticSearchQuery.getQuery();
-        assertEquals("{\n" +
-                         "  \"query\": {\n" +
-                         "    \"match_all\": {}\n" +
-                         "  },\n" +
-                         "  \"_source\": [\n" +
-                         "    \"reference\"\n" +
-                         "  ],\n" +
-                         "  \"size\": 100,\n" +
-                         "  \"sort\": [\n" +
-                         "    {\n" +
-                         "      \"reference.keyword\": \"asc\"\n" +
-                         "    }\n" +
-                         "  ]\n" +
-                         "\n" +
-                         "}", query);
+        assertEquals("{\n"
+                         + "  \"query\": {\n"
+                         + "    \"match_all\": {}\n"
+                         + "  },\n"
+                         + "  \"_source\": [\n"
+                         + "    \"reference\"\n"
+                         + "  ],\n"
+                         + "  \"size\": 100,\n"
+                         + "  \"sort\": [\n"
+                         + "    {\n"
+                         + "      \"reference.keyword\": \"asc\"\n"
+                         + "    }\n"
+                         + "  ]\n"
+                         + "\n"
+                         + "}", query);
     }
 
     @Test
@@ -44,20 +44,20 @@ public class ElasticSearchQueryTest {
             .searchAfterValue("1677777777")
             .build();
         String query = elasticSearchQuery.getQuery();
-        assertEquals("{\n" +
-                         "  \"query\": {\n" +
-                         "    \"match_all\": {}\n" +
-                         "  },\n" +
-                         "  \"_source\": [\n" +
-                         "    \"reference\"\n" +
-                         "  ],\n" +
-                         "  \"size\": 100,\n" +
-                         "  \"sort\": [\n" +
-                         "    {\n" +
-                         "      \"reference.keyword\": \"asc\"\n" +
-                         "    }\n" +
-                         "  ]\n" +
-                         ",\"search_after\": [1677777777]\n" +
-                         "}", query);
+        assertEquals("{\n"
+                         + "  \"query\": {\n"
+                         + "    \"match_all\": {}\n"
+                         + "  },\n"
+                         + "  \"_source\": [\n"
+                         + "    \"reference\"\n"
+                         + "  ],\n"
+                         + "  \"size\": 100,\n"
+                         + "  \"sort\": [\n"
+                         + "    {\n"
+                         + "      \"reference.keyword\": \"asc\"\n"
+                         + "    }\n"
+                         + "  ]\n"
+                         + ",\"search_after\": [1677777777]\n"
+                         + "}", query);
     }
 }

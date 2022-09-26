@@ -29,37 +29,37 @@ public class ElasticSearchRepositoryTest {
 
     private static final String AUTH_TOKEN = "Test_Auth_Token";
 
-    private static final String INITIAL_QUERY = "{\n" +
-        "  \"query\": {\n" +
-        "    \"match_all\": {}\n" +
-        "  },\n" +
-        "  \"_source\": [\n" +
-        "    \"reference\"\n" +
-        "  ],\n" +
-        "  \"size\": 100,\n" +
-        "  \"sort\": [\n" +
-        "    {\n" +
-        "      \"reference.keyword\": \"asc\"\n" +
-        "    }\n" +
-        "  ]\n" +
-        "\n" +
-        "}";
+    private static final String INITIAL_QUERY = "{\n"
+        + "  \"query\": {\n"
+        + "    \"match_all\": {}\n"
+        + "  },\n"
+        + "  \"_source\": [\n"
+        + "    \"reference\"\n"
+        + "  ],\n"
+        + "  \"size\": 100,\n"
+        + "  \"sort\": [\n"
+        + "    {\n"
+        + "      \"reference.keyword\": \"asc\"\n"
+        + "    }\n"
+        + "  ]\n"
+        + "\n"
+        + "}";
 
-    private static final String SEARCH_AFTER_QUERY = "{\n" +
-        "  \"query\": {\n" +
-        "    \"match_all\": {}\n" +
-        "  },\n" +
-        "  \"_source\": [\n" +
-        "    \"reference\"\n" +
-        "  ],\n" +
-        "  \"size\": 100,\n" +
-        "  \"sort\": [\n" +
-        "    {\n" +
-        "      \"reference.keyword\": \"asc\"\n" +
-        "    }\n" +
-        "  ]\n" +
-        ",\"search_after\": [1677777777]\n" +
-        "}";
+    private static final String SEARCH_AFTER_QUERY = "{\n"
+        + "  \"query\": {\n"
+        + "    \"match_all\": {}\n"
+        + "  },\n"
+        + "  \"_source\": [\n"
+        + "    \"reference\"\n"
+        + "  ],\n"
+        + "  \"size\": 100,\n"
+        + "  \"sort\": [\n"
+        + "    {\n"
+        + "      \"reference.keyword\": \"asc\"\n"
+        + "    }\n"
+        + "  ]\n"
+        + ",\"search_after\": [1677777777]\n"
+        + "}";
 
     private static final int QUERY_SIZE = 100;
 
@@ -116,6 +116,7 @@ public class ElasticSearchRepositoryTest {
         )).thenReturn(searchAfterResult);
 
         List<CaseDetails> returnCaseDetails = elasticSearchRepository.findCaseByCaseType(USER_TOKEN, CASE_TYPE);
+        assertNotNull(returnCaseDetails);
 
         verify(authTokenGenerator, times(1)).generate();
 
@@ -128,7 +129,6 @@ public class ElasticSearchRepositoryTest {
                                                       CASE_TYPE,
                                                       SEARCH_AFTER_QUERY);
 
-        assertNotNull(returnCaseDetails);
         assertEquals(1, returnCaseDetails.size());
     }
 }

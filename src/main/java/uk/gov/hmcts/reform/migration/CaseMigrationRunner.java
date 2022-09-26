@@ -27,7 +27,7 @@ public class CaseMigrationRunner implements CommandLineRunner {
     public void run(String... args) {
         try {
             caseMigrationProcessor.migrateCases(caseType);
-        } catch (Throwable e) {
+        } catch (Exception e) {
             log.error("Migration failed with the following reason: {}", e.getMessage(), e);
         }
     }

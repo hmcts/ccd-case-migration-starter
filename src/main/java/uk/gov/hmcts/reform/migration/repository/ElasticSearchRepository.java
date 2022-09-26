@@ -21,7 +21,7 @@ public class ElasticSearchRepository {
 
     private final AuthTokenGenerator authTokenGenerator;
 
-    private int querySize;
+    private final int querySize;
 
     @Autowired
     public ElasticSearchRepository(CoreCaseDataApi coreCaseDataApi,

@@ -5,19 +5,19 @@ import lombok.Builder;
 @Builder
 public class ElasticSearchQuery {
 
-    private static final String START_QUERY = "{\n" +
-        "  \"query\": {\n" +
-        "    \"match_all\": {}\n" +
-        "  },\n" +
-        "  \"_source\": [\n" +
-        "    \"reference\"\n" +
-        "  ],\n" +
-        "  \"size\": %s,\n" +
-        "  \"sort\": [\n" +
-        "    {\n" +
-        "      \"reference.keyword\": \"asc\"\n" +
-        "    }\n" +
-        "  ]\n";
+    private static final String START_QUERY = "{\n"
+        + "  \"query\": {\n"
+        + "    \"match_all\": {}\n"
+        + "  },\n"
+        + "  \"_source\": [\n"
+        + "    \"reference\"\n"
+        + "  ],\n"
+        + "  \"size\": %s,\n"
+        + "  \"sort\": [\n"
+        + "    {\n"
+        + "      \"reference.keyword\": \"asc\"\n"
+        + "    }\n"
+        + "  ]\n";
 
     private static final String END_QUERY = "\n}";
 

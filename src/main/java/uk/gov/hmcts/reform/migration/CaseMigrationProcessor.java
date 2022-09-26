@@ -52,8 +52,17 @@ public class CaseMigrationProcessor {
         log.info("Total number of processed cases: {}", getMigratedCases().size() + getFailedCases().size());
         log.info("Total number of migrations performed: {}", getMigratedCases().size());
         log.info(LOG_STRING);
-        log.info("Migrated cases: {} ", !getMigratedCases().isEmpty() ? getMigratedCases() : "NONE");
-        log.info("Failed cases: {}", !getFailedCases().isEmpty() ? getFailedCases() : "NONE");
+        if (getMigratedCases().isEmpty()) {
+            log.info("Migrated cases: NONE ");
+        } else {
+            log.info("Migrated cases: {} ", getMigratedCases());
+        }
+
+        if (getFailedCases().isEmpty()) {
+            log.info("Failed cases: NONE ");
+        } else {
+            log.info("Failed cases: {} ", getFailedCases());
+        }
         log.info("Data migration of all cases completed");
     }
 

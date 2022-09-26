@@ -22,7 +22,11 @@ public class CoreCaseDataService {
     @Autowired
     private CoreCaseDataApi coreCaseDataApi;
 
-    public CaseDetails update(String authorisation, String eventId, String eventSummary, String eventDescription, String caseType, CaseDetails caseDetails) {
+    public CaseDetails update(String authorisation, String eventId,
+                              String eventSummary,
+                              String eventDescription,
+                              String caseType,
+                              CaseDetails caseDetails) {
         String caseId = String.valueOf(caseDetails.getId());
         UserDetails userDetails = idamClient.getUserDetails(AuthUtil.getBearerToken(authorisation));
 
