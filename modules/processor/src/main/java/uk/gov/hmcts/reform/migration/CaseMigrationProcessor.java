@@ -31,7 +31,7 @@ public class CaseMigrationProcessor {
 
     private final Logger infoLogger = LoggerFactory.getLogger("ccd-migration-info");
 
-    private static final String EVENT_ID = "migrateCase";
+    private static final String EVENT_ID = "migrateWorkAllocationR3";
     private static final String EVENT_SUMMARY = "Migrate Case";
     private static final String EVENT_DESCRIPTION = "Migrate Case";
 

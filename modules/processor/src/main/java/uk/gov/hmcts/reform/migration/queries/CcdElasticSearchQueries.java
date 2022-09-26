@@ -41,21 +41,9 @@ public class CcdElasticSearchQueries {
 
     public static BoolQueryBuilder unsetCaseAccessManagementFieldsQuery() {
         return QueryBuilders.boolQuery()
-            .must(QueryBuilders.boolQuery()
-                    .should(existsQuery("data.appeal.appellant.address.postcode"))
-                    .should(existsQuery("data.appeal.appellant.appointee.address.postcode"))
-                        .minimumShouldMatch(1)
-            .must(existsQuery("data.processingVenue")))
             .mustNot(
                 QueryBuilders.boolQuery()
-                    .should(existsQuery("data.CaseAccessCategory"))
-                    .should(existsQuery("data.caseManagementCategory"))
-                    .should(existsQuery("data.caseManagementLocation"))
-                    .should(existsQuery("data.caseNameHmctsRestricted"))
-                    .should(existsQuery("data.caseNamePublic"))
-                    .should(existsQuery("data.caseNameHmctsInternal"))
-                    .should(existsQuery("data.ogdType"))
-                    .minimumShouldMatch(7));
+                    .should(existsQuery("data.SearchCriteria")));
     }
 
     public static SearchSourceBuilder pageForUnsetCaseAccessManagementFieldsFieldsQuery(int pageSize) {

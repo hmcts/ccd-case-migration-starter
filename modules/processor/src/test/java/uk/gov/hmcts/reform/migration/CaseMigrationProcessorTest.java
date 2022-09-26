@@ -33,7 +33,7 @@ public class CaseMigrationProcessorTest {
     private static final String USER_ID = "30";
     private static final String USER_TOKEN = "Bearer eeeejjjttt";
     private static final String CASE_ID = "11111";
-    private static final String EVENT_ID = "migrateCase";
+    private static final String EVENT_ID = "migrateWorkAllocationR3";
     private static final String EVENT_SUMMARY = "Migrate Case";
     private static final String EVENT_DESCRIPTION = "Migrate Case";
 
