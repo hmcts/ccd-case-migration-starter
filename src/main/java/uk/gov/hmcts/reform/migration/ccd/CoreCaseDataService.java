@@ -36,7 +36,7 @@ import uk.gov.hmcts.reform.migration.auth.AuthUtil;
 @RequiredArgsConstructor
 public class CoreCaseDataService {
 
-    private static final String SSCS_CASE_TYPE = "Benefit";
+    private static final String SSCS_CASE_TYPE = "Asylum";
 
     @Value("${migration.jurisdiction}")
     private String jurisdiction;

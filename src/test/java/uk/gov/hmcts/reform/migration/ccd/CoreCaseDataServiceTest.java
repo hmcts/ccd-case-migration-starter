@@ -26,7 +26,7 @@ import static org.mockito.Mockito.when;
 @RunWith(MockitoJUnitRunner.class)
 public class CoreCaseDataServiceTest {
 
-    private static final String EVENT_ID = "migrateCase";
+    private static final String EVENT_ID = "migrateWorkAllocationR3";
     private static final String CASE_TYPE = "CARE_SUPERVISION_EPO";
     private static final String CASE_ID = "123456789";
     private static final String JURISDICTION_ID = "PUBLICLAW";
