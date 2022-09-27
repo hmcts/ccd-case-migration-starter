@@ -30,6 +30,8 @@ public class CaseMigrationRunner implements CommandLineRunner {
     private int maxCasesToProcess;
     @Value("${migration.numThreads}")
     private int numThreads;
+    @Value("${migration.migrateCaseNameInternal}")
+    private boolean migrateCaseNameInternalFlag;
     private final IdamClient idamClient;
     private final CaseMigrationProcessor caseMigrationProcessor;
 
@@ -51,7 +53,7 @@ public class CaseMigrationRunner implements CommandLineRunner {
                 caseMigrationProcessor.processSingleCase(userToken, ccdCaseId, dryrun);
             } else {
                 log.info("Data migration of cases started");
-                caseMigrationProcessor.fetchAndProcessCases(userToken, dryrun, numThreads, pageParams);
+                caseMigrationProcessor.fetchAndProcessCases(userToken, dryrun, numThreads, pageParams, migrateCaseNameInternalFlag);
             }
 
             stopWatch.stop();

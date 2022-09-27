@@ -32,24 +32,38 @@ public class CcdElasticSearchQueries {
                 .must(matchQuery(CREATED_DATE, day)));
     }
 
-    public static SearchSourceBuilder fetchAllUnsetCaseAccessManagementFieldsCasesQuery() {
+    public static SearchSourceBuilder fetchAllUnmigratedGlobalSearchCasesQuery() {
         return SearchSourceBuilder.searchSource()
             .size(1)
-            .query(unsetCaseAccessManagementFieldsQuery())
+            .query(missingSearchCriteriaFieldsQuery())
             .sort(REFERENCE_KEYWORD, SortOrder.ASC);
     }
 
-    public static BoolQueryBuilder unsetCaseAccessManagementFieldsQuery() {
+    public static SearchSourceBuilder fetchAllCaseNameInternalCasesQuery() {
+        return SearchSourceBuilder.searchSource()
+            .size(1)
+            .query(missingCaseNameInternalFieldsQuery())
+            .sort(REFERENCE_KEYWORD, SortOrder.ASC);
+    }
+
+    public static BoolQueryBuilder missingSearchCriteriaFieldsQuery() {
         return QueryBuilders.boolQuery()
             .mustNot(
                 QueryBuilders.boolQuery()
                     .should(existsQuery("data.SearchCriteria")));
     }
 
+    public static BoolQueryBuilder missingCaseNameInternalFieldsQuery() {
+        return QueryBuilders.boolQuery()
+            .mustNot(
+                QueryBuilders.boolQuery()
+                    .should(existsQuery("data.caseNameHmctsInternal")));
+    }
+
     public static SearchSourceBuilder pageForUnsetCaseAccessManagementFieldsFieldsQuery(int pageSize) {
         return SearchSourceBuilder.searchSource()
             .size(pageSize)
-            .query(unsetCaseAccessManagementFieldsQuery())
+            .query(missingSearchCriteriaFieldsQuery())
             .sort(REFERENCE_KEYWORD, SortOrder.ASC);
     }
 
@@ -58,7 +72,7 @@ public class CcdElasticSearchQueries {
 
         return SearchSourceBuilder.searchSource()
             .size(pageSize)
-            .query(unsetCaseAccessManagementFieldsQuery())
+            .query(missingSearchCriteriaFieldsQuery())
             .searchAfter(new Object[] { lastCaseId})
             .sort(REFERENCE_KEYWORD, SortOrder.ASC);
     }
