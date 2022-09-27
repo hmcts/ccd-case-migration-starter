@@ -44,8 +44,4 @@ public class ElasticSearchQuery {
     private String getSubsequentQuery() {
         return String.format(START_QUERY, size) + "," + String.format(SEARCH_AFTER, searchAfterValue) + END_QUERY;
     }
-
-    public static void main(String[] args) {
-        System.out.println(String.format(START_QUERY, 100) + END_QUERY);
-    }
 }
