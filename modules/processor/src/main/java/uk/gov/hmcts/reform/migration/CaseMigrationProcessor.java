@@ -13,6 +13,7 @@ import java.util.stream.Collectors;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.time.StopWatch;
+import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -21,7 +22,8 @@ import uk.gov.hmcts.reform.ccd.client.model.SearchResult;
 import uk.gov.hmcts.reform.migration.ccd.CoreCaseDataService;
 import uk.gov.hmcts.reform.migration.service.DataMigrationService;
 
-import static uk.gov.hmcts.reform.migration.queries.CcdElasticSearchQueries.fetchAllUnsetCaseAccessManagementFieldsCasesQuery;
+import static uk.gov.hmcts.reform.migration.queries.CcdElasticSearchQueries.fetchAllCaseNameInternalCasesQuery;
+import static uk.gov.hmcts.reform.migration.queries.CcdElasticSearchQueries.fetchAllUnmigratedGlobalSearchCasesQuery;
 
 @Component
 @RequiredArgsConstructor
@@ -64,11 +66,17 @@ public class CaseMigrationProcessor {
         }
     }
 
-    public void fetchAndProcessCases(String userToken, boolean dryRun, int numThreads, MigrationPageParams pageParams)
+    public void fetchAndProcessCases(String userToken, boolean dryRun, int numThreads, MigrationPageParams pageParams, boolean migrateCaseNameInternalFlag)
         throws InterruptedException {
 
+        SearchSourceBuilder currentQuery = fetchAllUnmigratedGlobalSearchCasesQuery();
+
+        if (migrateCaseNameInternalFlag){
+            currentQuery = fetchAllCaseNameInternalCasesQuery();
+        }
+
         SearchResult initialSearch = coreCaseDataService.searchCases(userToken,
-            fetchAllUnsetCaseAccessManagementFieldsCasesQuery());
+            currentQuery);
 
         if (initialSearch.getTotal() <= 0) {
             return;
@@ -83,7 +91,7 @@ public class CaseMigrationProcessor {
         ExecutorService executorService = Executors.newFixedThreadPool(numThreads);
 
         fetchAndSubmitTasks(userToken, dryRun, totalCasesToProcess, pageParams.getPageSize(), searchFrom,
-            executorService);
+            executorService, migrateCaseNameInternalFlag);
 
         executorService.shutdown();
         executorService.awaitTermination(Integer.MAX_VALUE, TimeUnit.DAYS);
@@ -104,7 +112,7 @@ public class CaseMigrationProcessor {
     }
 
     private void fetchAndSubmitTasks(String userToken, boolean dryRun, int totalCasesToProcess, int pageSize,
-                                     Long searchFrom, ExecutorService executorService) {
+                                     Long searchFrom, ExecutorService executorService, boolean migrateCaseNameInternalFlag) {
         int casesFetched = 1;
         int numCasesToFetch = pageSize;
 
