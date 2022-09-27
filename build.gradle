@@ -23,6 +23,35 @@ java {
   }
 }
 
+sourceSets {
+  functionalTest {
+    java {
+      compileClasspath += main.output
+      runtimeClasspath += main.output
+      srcDir file('src/functionalTest/java')
+    }
+    resources.srcDir file('src/functionalTest/resources')
+  }
+
+  integrationTest {
+    java {
+      compileClasspath += main.output
+      runtimeClasspath += main.output
+      srcDir file('src/integrationTest/java')
+    }
+    resources.srcDir file('src/integrationTest/resources')
+  }
+
+  smokeTest {
+    java {
+      compileClasspath += main.output
+      runtimeClasspath += main.output
+      srcDir file('src/smokeTest/java')
+    }
+    resources.srcDir file('src/smokeTest/resources')
+  }
+}
+
 configurations {
   functionalTestImplementation.extendsFrom testImplementation
   functionalTestRuntimeOnly.extendsFrom runtimeOnly
@@ -55,6 +84,27 @@ test {
   failFast = true
 }
 
+task functional(type: Test) {
+  description = "Runs functional tests"
+  group = "Verification"
+  testClassesDirs = sourceSets.functionalTest.output.classesDirs
+  classpath = sourceSets.functionalTest.runtimeClasspath
+}
+
+task integration(type: Test) {
+  description = "Runs integration tests"
+  group = "Verification"
+  testClassesDirs = sourceSets.integrationTest.output.classesDirs
+  classpath = sourceSets.integrationTest.runtimeClasspath
+  failFast = true
+}
+
+task smoke(type: Test) {
+  description = "Runs Smoke Tests"
+  testClassesDirs = sourceSets.smokeTest.output.classesDirs
+  classpath = sourceSets.smokeTest.runtimeClasspath
+}
+
 checkstyle {
   maxWarnings = 0
   toolVersion = '9.2.1'
@@ -62,7 +112,7 @@ checkstyle {
 }
 
 jacocoTestReport {
-  executionData(test)
+  executionData(test, integration)
   reports {
     xml.required = true
     csv.required = false
@@ -71,6 +121,7 @@ jacocoTestReport {
 }
 
 project.tasks['sonarqube'].dependsOn jacocoTestReport
+project.tasks['check'].dependsOn integration
 
 sonarqube {
   properties {
@@ -125,6 +176,10 @@ ext {
   log4JVersion = "2.17.0"
   restAssuredVersion = '4.3.0!!'
   lombokVersion = "1.18.16"
+  junit_version = "4.12"
+  junitJupiterVersion = '5.7.1'
+  junitVintageVersion = '5.7.1'
+  powermockVersion = '2.0.7'
 }
 
 ext['snakeyaml.version'] = '1.31'
@@ -152,9 +207,16 @@ dependencies {
   implementation group: 'org.apache.logging.log4j', name: 'log4j-to-slf4j', version: log4JVersion
   testImplementation group: 'io.rest-assured', name: 'rest-assured', version: '4.3.0'
 
-  testImplementation(platform('org.junit:junit-bom:5.9.0'))
   testImplementation group: 'org.springframework.boot', name: 'spring-boot-starter-test'
 
+  testImplementation('org.junit.jupiter:junit-jupiter:5.6.0')
+  testImplementation "org.junit.jupiter:junit-jupiter-api:${junitJupiterVersion}"
+  testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:${junitJupiterVersion}"
+  testRuntimeOnly "org.junit.vintage:junit-vintage-engine:${junitVintageVersion}"
+  testImplementation group:'org.mockito', name: 'mockito-junit-jupiter', version:'3.6.0'
+  testImplementation group: 'org.powermock', name: 'powermock-api-mockito2', version: powermockVersion
+  testImplementation group: 'org.powermock', name: 'powermock-module-junit4', version: powermockVersion
+  testRuntimeOnly "org.junit.platform:junit-platform-commons:1.7.0"
   implementation group: 'org.projectlombok', name: 'lombok', version: lombokVersion
   annotationProcessor group: 'org.projectlombok', name: 'lombok', version: lombokVersion
   testAnnotationProcessor group: 'org.projectlombok', name: 'lombok', version: lombokVersion
@@ -194,108 +256,36 @@ wrapper {
     distributionType = Wrapper.DistributionType.ALL
 }
 
-subprojects { subproject ->
-  version = project.version
+test {
+  timeout = Duration.ofMinutes(30)
+  environment("AZURE_APPLICATIONINSIGHTS_INSTRUMENTATIONKEY", "some-key")
+  systemProperty 'java.locale.providers', 'COMPAT'
 
-  apply plugin: 'org.springframework.boot'
-  apply plugin: 'io.spring.dependency-management'
-  apply plugin: 'jacoco'
-  apply plugin: "com.github.kt3k.coveralls"
-  apply plugin: 'uk.gov.hmcts.java'
-  apply plugin: 'com.jfrog.bintray'
+  useJUnitPlatform()
 
-  configurations {
-    providedRuntime
+  testLogging {
+    events "failed"
+    exceptionFormat "short"
 
-    aatCompile.extendsFrom(testCompile)
-    aatRuntime.extendsFrom(testRuntime)
-    cucumberRuntime.extendsFrom(functionalRuntime)
-  }
-
-  dependencyUpdates.resolutionStrategy = {
-    componentSelection { rules ->
-      rules.all { ComponentSelection selection ->
-        boolean rejected = ['alpha', 'beta', 'rc', 'cr', 'm'].any { qualifier ->
-          selection.candidate.version ==~ /(?i).*[.-]${qualifier}[.\d-]*/
-        }
-        if (rejected) {
-          selection.reject('Release candidate')
-        }
-      }
-    }
-  }
-
-  // from https://github.com/junit-team/junit5/issues/1024'
-  afterEvaluate {
-    jacocoTestReport {
-      reports {
-        // XML required by coveralls and for the below coverage checks
-        // and html are generated by default
-        xml.enabled true
-        html.enabled true
-      }
-
-      classDirectories.setFrom((classDirectories.files.collect {
-        fileTree(dir: it, exclude: ['uk/gov/hmcts/reform/migration//**',
-                                    'uk/gov/hmcts/reform/domain//**'])
-      }))
-
-      doLast {
-        def report = file("${jacoco.reportsDir}/test/jacocoTestReport.xml")
-        logger.lifecycle("Checking coverage results: ${report}")
-
-        def parser = new XmlParser()
-        parser.setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false);
-        parser.setFeature("http://apache.org/xml/features/disallow-doctype-decl", false)
-        def results = parser.parse(report)
-
-        def percentage = {
-          def covered = it.'@covered' as Double
-          def missed = it.'@missed' as Double
-          ((covered / (covered + missed)) * 100).round(2)
-        }
-
-        def counters = results.counter
-        def metrics = [:]
-        metrics << [
-          'class'      : percentage(counters.find { it.'@type'.equals('CLASS') })
-        ]
-
-
-        def failures = []
-        metrics.each {
-          def limit = limits[it.key]
-          if (it.value < limit) {
-            failures.add("- ${it.key} coverage rate is: ${it.value}%, minimum is ${limit}%")
-          }
-        }
-
-        if (failures) {
-          logger.quiet("------------------ Code Coverage Failed -----------------------")
-          failures.each {
-            logger.quiet(it)
-          }
-          logger.quiet("---------------------------------------------------------------")
-          throw new GradleException("Code coverage failed")
-        } else{
-          logger.quiet("Passed Code Coverage Checks")
-        }
-      }
-    }
-  }
-
-  test {
-    environment("AZURE_APPLICATIONINSIGHTS_INSTRUMENTATIONKEY", "some-key")
-    useJUnitPlatform()
-
-    testLogging {
-      events "passed", "skipped", "failed"
+    debug {
+      events "passed", "started", "skipped", "failed"
+      exceptionFormat "full"
     }
 
-    reports {
-      html.enabled = true
-    }
+    info.events = ["failed", "skipped"]
   }
 
-  check.dependsOn jacocoTestReport
+  reports {
+    html.enabled = true
+  }
+
+  jvmArgs = [
+    '--add-modules', 'java.se',
+    '--add-exports', 'java.base/jdk.internal.ref=ALL-UNNAMED',
+    '--add-opens', 'java.base/java.lang=ALL-UNNAMED',
+    '--add-opens', 'java.base/java.nio=ALL-UNNAMED',
+    '--add-opens', 'java.base/sun.nio.ch=ALL-UNNAMED',
+    '--add-opens', 'java.management/sun.management=ALL-UNNAMED',
+    '--add-opens', 'jdk.management/com.sun.management.internal=ALL-UNNAMED'
+  ]
 }
