@@ -245,12 +245,12 @@ dependencyManagement {
 
 mainClassName = 'uk.gov.hmcts.reform.migration.CaseMigrationRunner'
 
-bootJar {
-  archiveFileName = "ccd-migration.jar"
-
+jar {
   manifest {
-    attributes('Implementation-Version': project.version.toString())
+    attributes 'Main-Class': 'uk.gov.hmcts.reform.migration.CaseMigrationRunner'
   }
+  archiveBaseName = 'ccd-case-migration'
+  archiveVersion = project.version.toString()
 }
 
 wrapper {
