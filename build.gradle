@@ -249,6 +249,7 @@ jar {
   manifest {
     attributes 'Main-Class': 'uk.gov.hmcts.reform.migration.CaseMigrationRunner'
   }
+  archiveFileName = 'ccd-case-migration.jar'
   archiveBaseName = 'ccd-case-migration'
   archiveVersion = project.version.toString()
 }
