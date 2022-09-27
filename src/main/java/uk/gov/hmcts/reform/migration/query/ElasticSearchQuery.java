@@ -5,19 +5,21 @@ import lombok.Builder;
 @Builder
 public class ElasticSearchQuery {
 
-    private static final String START_QUERY = "{\n"
-        + "  \"query\": {\n"
-        + "    \"match_all\": {}\n"
-        + "  },\n"
-        + "  \"_source\": [\n"
-        + "    \"reference\"\n"
-        + "  ],\n"
-        + "  \"size\": %s,\n"
-        + "  \"sort\": [\n"
-        + "    {\n"
-        + "      \"reference.keyword\": \"asc\"\n"
-        + "    }\n"
-        + "  ]\n";
+    private static final String START_QUERY = """
+        {
+          "query": {
+            "match_all": {}
+          },
+          "_source": [
+            "reference"
+          ],
+          "size": 100,
+          "sort": [
+            {
+              "reference.keyword": "asc"
+            }
+          ]
+          """;
 
     private static final String END_QUERY = "\n}";
 
@@ -41,5 +43,9 @@ public class ElasticSearchQuery {
 
     private String getSubsequentQuery() {
         return String.format(START_QUERY, size) + "," + String.format(SEARCH_AFTER, searchAfterValue) + END_QUERY;
+    }
+
+    public static void main(String[] args) {
+        System.out.println(String.format(START_QUERY, 100) + END_QUERY);
     }
 }
