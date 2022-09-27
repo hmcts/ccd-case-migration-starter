@@ -245,7 +245,7 @@ dependencyManagement {
 
 mainClassName = 'uk.gov.hmcts.reform.migration.CaseMigrationRunner'
 
-jar {
+bootJar {
   manifest {
     attributes 'Main-Class': 'uk.gov.hmcts.reform.migration.CaseMigrationRunner'
   }
