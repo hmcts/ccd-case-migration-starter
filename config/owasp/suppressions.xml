@@ -16,4 +16,13 @@
     <cve>CVE-2020-7712</cve>
    </suppress>
 
+  <!--Please add all the temporary suppression under the below section-->
+  <suppress>
+    <notes>Temporary Suppression</notes>
+    <cve>CVE-2016-1000027</cve>
+    <cve>CVE-2020-5412</cve>
+    <cve>CVE-2022-22976</cve>
+  </suppress>
+  <!--End of temporary suppression section -->
+
 </suppressions>
