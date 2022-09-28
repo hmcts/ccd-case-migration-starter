@@ -6,6 +6,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 import uk.gov.hmcts.reform.ccd.client.model.CaseDetails;
+import uk.gov.hmcts.reform.domain.exception.CaseMigrationException;
 import uk.gov.hmcts.reform.migration.ccd.CoreCaseDataService;
 import uk.gov.hmcts.reform.migration.repository.ElasticSearchRepository;
 import uk.gov.hmcts.reform.migration.repository.IdamRepository;
@@ -15,6 +16,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -67,5 +69,10 @@ public class CaseMigrationProcessorTest {
                     EVENT_DESCRIPTION,
                     CASE_TYPE,
                     details);
+    }
+
+    @Test
+    public void shouldThrowExceptionWhenCaseTypeNull() {
+        assertThrows(CaseMigrationException.class, () -> caseMigrationProcessor.migrateCases(null));
     }
 }

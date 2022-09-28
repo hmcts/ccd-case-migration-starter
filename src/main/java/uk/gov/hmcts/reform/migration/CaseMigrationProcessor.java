@@ -4,7 +4,9 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 import uk.gov.hmcts.reform.ccd.client.model.CaseDetails;
+import uk.gov.hmcts.reform.domain.exception.CaseMigrationException;
 import uk.gov.hmcts.reform.migration.ccd.CoreCaseDataService;
 import uk.gov.hmcts.reform.migration.repository.ElasticSearchRepository;
 import uk.gov.hmcts.reform.migration.repository.IdamRepository;
@@ -41,6 +43,7 @@ public class CaseMigrationProcessor {
     private List<Long> failedCases = new ArrayList<>();
 
     public void migrateCases(String caseType) {
+        validateCaseType(caseType);
         log.info("Data migration of all cases started for case type: {}", caseType);
         String userToken =  idamRepository.generateUserToken();
         List<CaseDetails> listOfCaseDetails = elasticSearchRepository.findCaseByCaseType(userToken, caseType);
@@ -64,6 +67,12 @@ public class CaseMigrationProcessor {
             log.info("Failed cases: {} ", getFailedCases());
         }
         log.info("Data migration of all cases completed");
+    }
+
+    private void validateCaseType(String caseType) {
+        if (!StringUtils.hasText(caseType)) {
+            throw new CaseMigrationException("Provide case type for the migration");
+        }
     }
 
     private void updateCase(String authorisation, String caseType, CaseDetails caseDetails) {
