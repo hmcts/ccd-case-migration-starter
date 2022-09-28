@@ -1,10 +1,12 @@
 package uk.gov.hmcts.reform.migration;
 
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
+import org.springframework.test.util.ReflectionTestUtils;
 import uk.gov.hmcts.reform.ccd.client.model.CaseDetails;
 import uk.gov.hmcts.reform.domain.exception.CaseMigrationException;
 import uk.gov.hmcts.reform.migration.ccd.CoreCaseDataService;
@@ -46,6 +48,11 @@ public class CaseMigrationProcessorTest {
 
     @Mock
     private IdamRepository idamRepository;
+
+    @Before
+    public void setUp() {
+        ReflectionTestUtils.setField(caseMigrationProcessor, "caseProcessLimit", 1);
+    }
 
     @Test
     public void shouldMigrateCasesOfACaseType() {

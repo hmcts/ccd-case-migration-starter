@@ -3,6 +3,7 @@ package uk.gov.hmcts.reform.migration;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import uk.gov.hmcts.reform.ccd.client.model.CaseDetails;
@@ -42,12 +43,16 @@ public class CaseMigrationProcessor {
     @Getter
     private List<Long> failedCases = new ArrayList<>();
 
+    @Value("${case-migration.processing.limit}")
+    private int caseProcessLimit;
+
     public void migrateCases(String caseType) {
         validateCaseType(caseType);
         log.info("Data migration of all cases started for case type: {}", caseType);
         String userToken =  idamRepository.generateUserToken();
         List<CaseDetails> listOfCaseDetails = elasticSearchRepository.findCaseByCaseType(userToken, caseType);
         listOfCaseDetails.stream()
+            .limit(caseProcessLimit)
             .forEach(caseDetails -> updateCase(userToken, caseType, caseDetails));
         log.info(LOG_STRING);
         log.info("Data migration completed");
