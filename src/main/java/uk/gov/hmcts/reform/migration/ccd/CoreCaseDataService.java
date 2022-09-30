@@ -1,8 +1,7 @@
 package uk.gov.hmcts.reform.migration.ccd;
 
 import static java.util.Collections.emptyList;
-import static uk.gov.hmcts.reform.migration.queries.CcdElasticSearchQueries.oldestCaseQuery;
-import static uk.gov.hmcts.reform.migration.queries.CcdElasticSearchQueries.pageForUnsetCaseAccessManagementFieldsFieldsQuery;
+import static uk.gov.hmcts.reform.migration.queries.CcdElasticSearchQueries.*;
 
 import feign.FeignException;
 
@@ -16,6 +15,7 @@ import java.util.stream.IntStream;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.time.StopWatch;
+import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -36,7 +36,7 @@ import uk.gov.hmcts.reform.migration.auth.AuthUtil;
 @RequiredArgsConstructor
 public class CoreCaseDataService {
 
-    private static final String SSCS_CASE_TYPE = "Asylum";
+    private static final String IAC_CASE_TYPE = "Asylum";
 
     @Value("${migration.jurisdiction}")
     private String jurisdiction;
@@ -52,12 +52,12 @@ public class CoreCaseDataService {
         return coreCaseDataApi.getCase(authorisation, authTokenGenerator.generate(), caseId);
     }
 
-    public List<CaseDetails> fetchNCases(String authorisation, int casesToFetch, long searchFrom) {
+    public List<CaseDetails> fetchNCases(String authorisation, int casesToFetch, long searchFrom, BoolQueryBuilder queryBuilder) {
 
         StopWatch stopWatch = StopWatch.createStarted();
 
         List<CaseDetails> page = fetchPage(authorisation,
-            pageForUnsetCaseAccessManagementFieldsFieldsQuery(searchFrom, casesToFetch));
+            pageForUnsetCaseFieldsFieldsQuery(searchFrom, casesToFetch, queryBuilder));
 
         stopWatch.stop();
 
@@ -125,7 +125,7 @@ public class CoreCaseDataService {
         return coreCaseDataApi.searchCases(
             authorisation,
             authTokenGenerator.generate(),
-            SSCS_CASE_TYPE,
+            IAC_CASE_TYPE,
             searchBuilder.toString());
     }
 

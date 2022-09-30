@@ -13,6 +13,7 @@ import java.util.stream.Collectors;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.time.StopWatch;
+import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,10 +21,10 @@ import org.springframework.stereotype.Component;
 import uk.gov.hmcts.reform.ccd.client.model.CaseDetails;
 import uk.gov.hmcts.reform.ccd.client.model.SearchResult;
 import uk.gov.hmcts.reform.migration.ccd.CoreCaseDataService;
+import uk.gov.hmcts.reform.migration.ccd.MigrationEvent;
 import uk.gov.hmcts.reform.migration.service.DataMigrationService;
 
-import static uk.gov.hmcts.reform.migration.queries.CcdElasticSearchQueries.fetchAllCaseNameInternalCasesQuery;
-import static uk.gov.hmcts.reform.migration.queries.CcdElasticSearchQueries.fetchAllUnmigratedGlobalSearchCasesQuery;
+import static uk.gov.hmcts.reform.migration.queries.CcdElasticSearchQueries.*;
 
 @Component
 @RequiredArgsConstructor
@@ -33,7 +34,7 @@ public class CaseMigrationProcessor {
 
     private final Logger infoLogger = LoggerFactory.getLogger("ccd-migration-info");
 
-    private static final String EVENT_ID = "migrateWorkAllocationR3";
+    private MigrationEvent eventId = MigrationEvent.UNKNOWN_MIGRATION;
     private static final String EVENT_SUMMARY = "Migrate Case";
     private static final String EVENT_DESCRIPTION = "Migrate Case";
 
@@ -66,13 +67,24 @@ public class CaseMigrationProcessor {
         }
     }
 
-    public void fetchAndProcessCases(String userToken, boolean dryRun, int numThreads, MigrationPageParams pageParams, boolean migrateCaseNameInternalFlag)
+    public void fetchAndProcessCases(String userToken, boolean dryRun, int numThreads, MigrationPageParams pageParams,
+                                     MigrationEvent migrationEvent, boolean migrateCaseNameInternalFlag,
+                                     boolean migrateCaseFlagsInternalFlag)
         throws InterruptedException {
 
-        SearchSourceBuilder currentQuery = fetchAllUnmigratedGlobalSearchCasesQuery();
+        eventId = migrationEvent;
 
-        if (migrateCaseNameInternalFlag){
+        SearchSourceBuilder currentQuery = fetchAllUnmigratedGlobalSearchCasesQuery();
+        BoolQueryBuilder queryBuilder = (BoolQueryBuilder) fetchAllUnmigratedGlobalSearchCasesQuery().query();
+
+        if (migrationEvent.equals(MigrationEvent.MIGRATE_WORK_ALLOCATION_R3) && migrateCaseNameInternalFlag){
             currentQuery = fetchAllCaseNameInternalCasesQuery();
+            queryBuilder = (BoolQueryBuilder) fetchAllCaseNameInternalCasesQuery().query();
+        }
+
+        if (migrationEvent.equals(MigrationEvent.MIGRATE_CASE_FLAGS) && migrateCaseFlagsInternalFlag){
+            currentQuery = fetchAllUnmigratedCaseFlagsInternalCasesQuery();
+            queryBuilder = (BoolQueryBuilder) fetchAllUnmigratedCaseFlagsInternalCasesQuery().query();
         }
 
         SearchResult initialSearch = coreCaseDataService.searchCases(userToken,
@@ -91,7 +103,7 @@ public class CaseMigrationProcessor {
         ExecutorService executorService = Executors.newFixedThreadPool(numThreads);
 
         fetchAndSubmitTasks(userToken, dryRun, totalCasesToProcess, pageParams.getPageSize(), searchFrom,
-            executorService, migrateCaseNameInternalFlag);
+            executorService, queryBuilder);
 
         executorService.shutdown();
         executorService.awaitTermination(Integer.MAX_VALUE, TimeUnit.DAYS);
@@ -112,7 +124,7 @@ public class CaseMigrationProcessor {
     }
 
     private void fetchAndSubmitTasks(String userToken, boolean dryRun, int totalCasesToProcess, int pageSize,
-                                     Long searchFrom, ExecutorService executorService, boolean migrateCaseNameInternalFlag) {
+                                     Long searchFrom, ExecutorService executorService, BoolQueryBuilder queryBuilder) {
         int casesFetched = 1;
         int numCasesToFetch = pageSize;
 
@@ -120,7 +132,7 @@ public class CaseMigrationProcessor {
             numCasesToFetch = resolvePageSize(totalCasesToProcess, casesFetched, numCasesToFetch, pageSize);
 
             List<CaseDetails> caseDetails =
-                coreCaseDataService.fetchNCases(userToken, numCasesToFetch, searchFrom);
+                coreCaseDataService.fetchNCases(userToken, numCasesToFetch, searchFrom, queryBuilder);
 
             if (caseDetails.isEmpty()) {
                 break;
@@ -177,7 +189,7 @@ public class CaseMigrationProcessor {
                 coreCaseDataService.update(
                     authorisation,
                     id.toString(),
-                    EVENT_ID,
+                    eventId.toString(),
                     EVENT_SUMMARY,
                     EVENT_DESCRIPTION,
                     migratedData);
