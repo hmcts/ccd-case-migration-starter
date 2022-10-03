@@ -181,6 +181,7 @@ ext {
   junitJupiterVersion = '5.7.1'
   junitVintageVersion = '5.7.1'
   powermockVersion = '2.0.7'
+  springSecurity   =  '5.7.1'
 }
 
 ext['snakeyaml.version'] = '1.31'
@@ -222,6 +223,13 @@ dependencies {
   implementation group: 'org.projectlombok', name: 'lombok', version: lombokVersion
   annotationProcessor group: 'org.projectlombok', name: 'lombok', version: lombokVersion
   testAnnotationProcessor group: 'org.projectlombok', name: 'lombok', version: lombokVersion
+
+  implementation group: 'commons-io', name: 'commons-io', version: '2.8.0'
+  implementation group: 'org.springframework.security', name: 'spring-security-oauth2-resource-server', version: springSecurity
+  implementation group: 'org.springframework.security', name: 'spring-security-oauth2-client', version: springSecurity
+  implementation group: 'org.springframework.security', name: 'spring-security-oauth2-jose', version: springSecurity
+  implementation group: 'org.springframework.security', name: 'spring-security-oauth2-core', version: springSecurity
+  implementation group: 'org.springframework.security', name: 'spring-security-config', version: springSecurity
 }
 
 dependencyManagement {
@@ -254,6 +262,12 @@ bootJar {
 
 wrapper {
     distributionType = Wrapper.DistributionType.ALL
+}
+
+configurations.all {
+  exclude group: 'org.bouncycastle', module: 'bcprov-jdk15on'
+  exclude group: 'org.springframework.boot', module: 'spring-boot-starter-security'
+  exclude group: 'org.springframework.security', module: 'spring-security-rsa'
 }
 
 test {
