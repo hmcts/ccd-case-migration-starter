@@ -71,9 +71,14 @@ public class CcdElasticSearchQueries {
 
         return QueryBuilders.boolQuery()
             .must(existsQuery("data.caseFlags"))
-            .should(QueryBuilders.boolQuery()
+            .must(QueryBuilders.boolQuery()
                 .should(QueryBuilders.matchQuery("data.caseFlags.value.caseFlagType", "anonymity"))
+                .should(QueryBuilders.matchQuery("data.caseFlags.value.caseFlagType", "complexCase"))
                 .should(QueryBuilders.matchQuery("data.caseFlags.value.caseFlagType", "detainedImmigrationAppeal"))
+                .should(QueryBuilders.matchQuery("data.caseFlags.value.caseFlagType", "foreignNationalOffender"))
+                .should(QueryBuilders.matchQuery("data.caseFlags.value.caseFlagType", "potentiallyViolentPerson"))
+                .should(QueryBuilders.matchQuery("data.caseFlags.value.caseFlagType", "unacceptableCustomerBehaviour"))
+                .should(QueryBuilders.matchQuery("data.caseFlags.value.caseFlagType", "unaccompaniedMinor"))
                 .minimumShouldMatch(1))
             .mustNot(
                 QueryBuilders.boolQuery()
