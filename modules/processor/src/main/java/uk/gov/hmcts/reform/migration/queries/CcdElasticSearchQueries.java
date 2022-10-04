@@ -46,6 +46,13 @@ public class CcdElasticSearchQueries {
             .sort(REFERENCE_KEYWORD, SortOrder.ASC);
     }
 
+    public static SearchSourceBuilder fetchAllUnmigratedCaseFlagsInternalCasesQuery() {
+        return SearchSourceBuilder.searchSource()
+            .size(1)
+            .query(caseFlagsInternalFieldsQuery())
+            .sort(REFERENCE_KEYWORD, SortOrder.ASC);
+    }
+
     public static BoolQueryBuilder missingSearchCriteriaFieldsQuery() {
         return QueryBuilders.boolQuery()
             .mustNot(
@@ -58,6 +65,25 @@ public class CcdElasticSearchQueries {
             .mustNot(
                 QueryBuilders.boolQuery()
                     .should(existsQuery("data.caseNameHmctsInternal")));
+    }
+
+    public static BoolQueryBuilder caseFlagsInternalFieldsQuery() {
+
+        return QueryBuilders.boolQuery()
+            .must(existsQuery("data.caseFlags"))
+            .must(QueryBuilders.boolQuery()
+                .should(QueryBuilders.matchQuery("data.caseFlags.value.caseFlagType", "anonymity"))
+                .should(QueryBuilders.matchQuery("data.caseFlags.value.caseFlagType", "complexCase"))
+                .should(QueryBuilders.matchQuery("data.caseFlags.value.caseFlagType", "detainedImmigrationAppeal"))
+                .should(QueryBuilders.matchQuery("data.caseFlags.value.caseFlagType", "foreignNationalOffender"))
+                .should(QueryBuilders.matchQuery("data.caseFlags.value.caseFlagType", "potentiallyViolentPerson"))
+                .should(QueryBuilders.matchQuery("data.caseFlags.value.caseFlagType", "unacceptableCustomerBehaviour"))
+                .should(QueryBuilders.matchQuery("data.caseFlags.value.caseFlagType", "unaccompaniedMinor"))
+                .minimumShouldMatch(1))
+            .mustNot(
+                QueryBuilders.boolQuery()
+                    .should(existsQuery("data.caseLevelFlags"))
+                    .should(existsQuery("data.appellantLevelFlags")));
     }
 
     public static SearchSourceBuilder pageForUnsetCaseAccessManagementFieldsFieldsQuery(int pageSize) {
@@ -73,6 +99,16 @@ public class CcdElasticSearchQueries {
         return SearchSourceBuilder.searchSource()
             .size(pageSize)
             .query(missingSearchCriteriaFieldsQuery())
+            .searchAfter(new Object[] { lastCaseId})
+            .sort(REFERENCE_KEYWORD, SortOrder.ASC);
+    }
+
+    public static SearchSourceBuilder pageForUnsetCaseFieldsFieldsQuery(Long lastCaseId, int pageSize,
+                                                                        BoolQueryBuilder queryBuilder) {
+
+        return SearchSourceBuilder.searchSource()
+            .size(pageSize)
+            .query(queryBuilder)
             .searchAfter(new Object[] { lastCaseId})
             .sort(REFERENCE_KEYWORD, SortOrder.ASC);
     }

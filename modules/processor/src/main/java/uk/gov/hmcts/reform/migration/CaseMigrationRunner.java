@@ -10,6 +10,7 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import uk.gov.hmcts.reform.idam.client.IdamClient;
+import uk.gov.hmcts.reform.migration.ccd.MigrationEvent;
 
 @SpringBootApplication
 @RequiredArgsConstructor
@@ -32,6 +33,8 @@ public class CaseMigrationRunner implements CommandLineRunner {
     private int numThreads;
     @Value("${migration.migrateCaseNameInternal}")
     private boolean migrateCaseNameInternalFlag;
+    @Value("${migration.migrateCaseFlagsInternal}")
+    private boolean migrateCaseFlagsInternalFlag;
     private final IdamClient idamClient;
     private final CaseMigrationProcessor caseMigrationProcessor;
 
@@ -48,12 +51,20 @@ public class CaseMigrationRunner implements CommandLineRunner {
 
             StopWatch stopWatch = StopWatch.createStarted();
 
+            log.info("-----------------------------------------");
+            log.info("Is this DryRun: {}", dryrun);
+            log.info("-----------------------------------------");
+            log.info("-----------------------------------------");
+            log.info("Migration Event: {}", getMigrationEvent());
+            log.info("-----------------------------------------");
+
             if (ccdCaseId != null && !ccdCaseId.isBlank()) {
                 log.info("Data migration of single case started");
                 caseMigrationProcessor.processSingleCase(userToken, ccdCaseId, dryrun);
             } else {
                 log.info("Data migration of cases started");
-                caseMigrationProcessor.fetchAndProcessCases(userToken, dryrun, numThreads, pageParams, migrateCaseNameInternalFlag);
+                caseMigrationProcessor.fetchAndProcessCases(userToken, dryrun, numThreads, pageParams,
+                    getMigrationEvent(), migrateCaseNameInternalFlag, migrateCaseFlagsInternalFlag);
             }
 
             stopWatch.stop();
@@ -74,6 +85,19 @@ public class CaseMigrationRunner implements CommandLineRunner {
             log.info("-----------------------------------------");
         } catch (Throwable e) {
             log.error("Migration failed with the following reason: {}", e.getMessage(), e);
+        }
+    }
+
+    private MigrationEvent getMigrationEvent(){
+
+        if (migrateCaseNameInternalFlag){
+            return MigrationEvent.MIGRATE_WORK_ALLOCATION_R3;
+        }
+        else if (migrateCaseFlagsInternalFlag) {
+            return MigrationEvent.MIGRATE_CASE_FLAGS;
+        }
+        else {
+            return MigrationEvent.MIGRATE_WORK_ALLOCATION_R3;
         }
     }
 }
