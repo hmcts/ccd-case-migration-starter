@@ -188,13 +188,13 @@ ext {
   junitVintageVersion = '5.7.1'
   powermockVersion = '2.0.7'
   springSecurity   =  '5.7.1'
+  springCloudVersion = '2021.0.3'
 }
 
 ext['snakeyaml.version'] = '1.33'
 ext['spring-security.version'] = '5.7.3'
 
 dependencies {
-  implementation group: 'org.springframework.cloud', name: 'spring-cloud-starter-bootstrap', version: '3.0.1'
   implementation group: 'org.springframework.boot', name: 'spring-boot-starter-web'
   implementation group: 'org.springframework.boot', name: 'spring-boot-starter-actuator'
   implementation group: 'org.springframework.boot', name: 'spring-boot-starter-aop'
