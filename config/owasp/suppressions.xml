@@ -8,7 +8,7 @@
       CVE-2018-1258
       CVE-2020-7712
     </notes>
-    <cve> CVE-2020-10663 </cve>
+    <cve>CVE-2020-10663</cve>
     <cve>CVE-2018-1258</cve>
     <cve>CVE-2020-7712</cve>
   </suppress>
