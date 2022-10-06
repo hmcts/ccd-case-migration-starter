@@ -55,13 +55,22 @@ public class CaseMigrationProcessor {
             .limit(caseProcessLimit)
             .forEach(caseDetails -> updateCase(userToken, caseType, caseDetails));
         log.info(
-            "{}\n Data migration completed \n{} \nTotal number of processed cases: {} \n"
-                + "Total number of migrations performed: {} \n{}",
+            """
+                {}
+                Data migration completed
+                {}
+                Total number of processed cases:
+                {}
+                Total number of migrations performed:
+                {}
+                {}
+                """,
             LOG_STRING,
             LOG_STRING,
             getMigratedCases().size() + getFailedCases().size(),
             getMigratedCases().size(),
-            LOG_STRING);
+            LOG_STRING
+        );
 
         if (getMigratedCases().isEmpty()) {
             log.info("Migrated cases: NONE ");
