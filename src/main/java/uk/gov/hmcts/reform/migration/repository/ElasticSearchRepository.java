@@ -48,13 +48,13 @@ public class ElasticSearchRepository {
 
         List<CaseDetails> caseDetails = new ArrayList<>();
 
-        if (searchResult.getTotal() > 0) {
+        if (searchResult != null && searchResult.getTotal() > 0) {
             List<CaseDetails> searchResultCases = searchResult.getCases();
             caseDetails.addAll(searchResultCases);
 
             String searchAfterValue = searchResultCases.get(searchResultCases.size() - 1).getId().toString();
 
-            boolean keepSearching;
+            boolean keepSearching = false;
             do {
 
                 ElasticSearchQuery subsequentElasticSearchQuery = ElasticSearchQuery.builder()
@@ -69,14 +69,15 @@ public class ElasticSearchRepository {
                                                 caseType, subsequentElasticSearchQuery.getQuery()
                     );
 
-                caseDetails.addAll(subsequentSearchResult.getCases());
-                keepSearching = !subsequentSearchResult.getCases().isEmpty();
-                if (keepSearching) {
-                    searchAfterValue = subsequentSearchResult.getCases()
-                        .get(subsequentSearchResult.getCases().size() - 1)
-                        .getId().toString();
+                if (subsequentSearchResult != null) {
+                    caseDetails.addAll(subsequentSearchResult.getCases());
+                    keepSearching = subsequentSearchResult.getTotal() > 0;
+                    if (keepSearching) {
+                        searchAfterValue = subsequentSearchResult.getCases()
+                            .get(subsequentSearchResult.getCases().size() - 1)
+                            .getId().toString();
+                    }
                 }
-
             } while (keepSearching);
         }
         log.info("The Case Migration has processed caseDetails {}.", caseDetails.size());

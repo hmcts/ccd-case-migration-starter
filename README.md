@@ -17,7 +17,7 @@ Package offers framework for data migrations within CCD that runs the following 
 
 ### Domain classes
 
-Package offers base domain classes for standardised case data structures such as party, telephone number etc.  
+Package offers base domain classes for standardised case data structures such as party, telephone number etc.
 
 ## Getting started
 
@@ -75,7 +75,6 @@ migration.idam.username= # IDAM username of a system update user that performs d
 migration.idam.password= # IDAM password of a system update user that performs data migration
 migration.jurisdiction= # CCD jurisdiction that data migration is run against
 migration.casetype= # CCD case type that data migration is run against
-migration.caseId= # optional CCD case ID in case only one case needs to be migrated
 ```
 
 ## Future development

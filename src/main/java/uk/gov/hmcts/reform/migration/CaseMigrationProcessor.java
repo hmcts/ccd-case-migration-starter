@@ -48,7 +48,7 @@ public class CaseMigrationProcessor {
 
     public void migrateCases(String caseType) {
         validateCaseType(caseType);
-        log.info("Data migration of all cases started for case type: {}", caseType);
+        log.info("Data migration of cases started for case type: {}", caseType);
         String userToken =  idamRepository.generateUserToken();
         List<CaseDetails> listOfCaseDetails = elasticSearchRepository.findCaseByCaseType(userToken, caseType);
         listOfCaseDetails.stream()
@@ -71,7 +71,7 @@ public class CaseMigrationProcessor {
         } else {
             log.info("Failed cases: {} ", getFailedCases());
         }
-        log.info("Data migration of all cases completed");
+        log.info("Data migration of cases completed");
     }
 
     private void validateCaseType(String caseType) {
