@@ -11,7 +11,7 @@ public class DataMigrationServiceImpl implements DataMigrationService<Map<String
 
     @Override
     public Predicate<CaseDetails> accepts() {
-        return caseDetails -> true;
+        return caseDetails -> caseDetails == null ? false : true;
     }
 
     @Override
