@@ -1,4 +1,10 @@
 # Don't modify this file, it is only needed for the pipeline to set the image and ingressHost
-java:
+job:
   image: ${IMAGE_NAME}
   ingressHost: ${SERVICE_FQDN}
+  kind: CronJob
+  schedule: "*/20 * * * *"
+  startingDeadlineSeconds: 180
+  concurrencyPolicy: Forbid
+global:
+  jobKind: CronJob

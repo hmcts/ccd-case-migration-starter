@@ -1,6 +1,7 @@
-java:
-  applicationPort: 4999
+job:
   image: 'hmctspublic.azurecr.io/ccd/migration:latest'
+  kind: CronJob
+  schedule: "0 22 * * *"
   ingressHost: ccd-migration-{{ .Values.global.environment }}.service.core-compute-{{ .Values.global.environment }}.internal
   aadIdentityName: ccd
 #  Uncomment once the vault containing the app insights key has been set up
