@@ -12,6 +12,9 @@ def product = "ccd"
 def component = "migration"
 
 withNightlyPipeline(type, product, component) {
+  enableAksStagingDeployment()
+  disableLegacyDeployment()
+  nonServiceApp()
   enableFortifyScan()
 
   after('fortify-scan') {
