@@ -62,6 +62,7 @@ public class ElasticSearchRepositoryTest {
         + "}";
 
     private static final int QUERY_SIZE = 100;
+    private static final int CASE_PROCESS_LIMIT = 100;
 
     private ElasticSearchRepository elasticSearchRepository;
 
@@ -73,7 +74,10 @@ public class ElasticSearchRepositoryTest {
 
     @Before
     public void setUp() {
-        elasticSearchRepository = new ElasticSearchRepository(coreCaseDataApi, authTokenGenerator, QUERY_SIZE);
+        elasticSearchRepository = new ElasticSearchRepository(coreCaseDataApi,
+                                                              authTokenGenerator,
+                                                              QUERY_SIZE,
+                                                              CASE_PROCESS_LIMIT);
         when(authTokenGenerator.generate()).thenReturn(AUTH_TOKEN);
     }
 

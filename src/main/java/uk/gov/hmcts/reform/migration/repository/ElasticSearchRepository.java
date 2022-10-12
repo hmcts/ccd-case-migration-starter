@@ -23,13 +23,17 @@ public class ElasticSearchRepository {
 
     private final int querySize;
 
+    private final int caseProcessLimit;
+
     @Autowired
     public ElasticSearchRepository(CoreCaseDataApi coreCaseDataApi,
                                    AuthTokenGenerator authTokenGenerator,
-                                   @Value("${case-migration.elasticsearch.querySize}") int querySize) {
+                                   @Value("${case-migration.elasticsearch.querySize}") int querySize,
+                                   @Value("${case-migration.processing.limit}") int caseProcessLimit) {
         this.coreCaseDataApi = coreCaseDataApi;
         this.authTokenGenerator = authTokenGenerator;
         this.querySize = querySize;
+        this.caseProcessLimit = caseProcessLimit;
     }
 
     public List<CaseDetails> findCaseByCaseType(String userToken, String caseType) {
@@ -52,10 +56,13 @@ public class ElasticSearchRepository {
             List<CaseDetails> searchResultCases = searchResult.getCases();
             caseDetails.addAll(searchResultCases);
 
-            String searchAfterValue = searchResultCases.get(searchResultCases.size() - 1).getId().toString();
-
             boolean keepSearching = false;
             do {
+                if (caseDetails.size() >= caseProcessLimit) {
+                    break;
+                }
+
+                String searchAfterValue = searchResultCases.get(searchResultCases.size() - 1).getId().toString();
 
                 ElasticSearchQuery subsequentElasticSearchQuery = ElasticSearchQuery.builder()
                     .initialSearch(false)
