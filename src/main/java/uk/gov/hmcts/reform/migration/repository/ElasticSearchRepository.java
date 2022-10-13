@@ -55,14 +55,13 @@ public class ElasticSearchRepository {
         if (searchResult != null && searchResult.getTotal() > 0) {
             List<CaseDetails> searchResultCases = searchResult.getCases();
             caseDetails.addAll(searchResultCases);
+            String searchAfterValue = searchResultCases.get(searchResultCases.size() - 1).getId().toString();
 
             boolean keepSearching = false;
             do {
                 if (caseDetails.size() >= caseProcessLimit) {
                     break;
                 }
-
-                String searchAfterValue = searchResultCases.get(searchResultCases.size() - 1).getId().toString();
 
                 ElasticSearchQuery subsequentElasticSearchQuery = ElasticSearchQuery.builder()
                     .initialSearch(false)
