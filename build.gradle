@@ -198,7 +198,6 @@ ext['spring-security.version'] = '5.7.3'
 
 dependencies {
   implementation("org.springframework.cloud:spring-cloud-starter-bootstrap")
-  implementation group: 'org.springframework.boot', name: 'spring-boot-starter-web'
   implementation group: 'org.springframework.boot', name: 'spring-boot-starter-actuator'
   implementation group: 'org.springframework.boot', name: 'spring-boot-starter-aop'
   implementation group: 'org.springframework.boot', name: 'spring-boot-starter-json'

@@ -57,12 +57,8 @@ public class ElasticSearchRepository {
             caseDetails.addAll(searchResultCases);
             String searchAfterValue = searchResultCases.get(searchResultCases.size() - 1).getId().toString();
 
-            boolean keepSearching = false;
+            boolean keepSearching;
             do {
-                if (caseDetails.size() >= caseProcessLimit) {
-                    break;
-                }
-
                 ElasticSearchQuery subsequentElasticSearchQuery = ElasticSearchQuery.builder()
                     .initialSearch(false)
                     .size(querySize)
@@ -75,13 +71,12 @@ public class ElasticSearchRepository {
                                                 caseType, subsequentElasticSearchQuery.getQuery()
                     );
 
+                keepSearching = false;
                 if (subsequentSearchResult != null) {
                     caseDetails.addAll(subsequentSearchResult.getCases());
-                    keepSearching = subsequentSearchResult.getTotal() > 0;
+                    keepSearching = subsequentSearchResult.getCases().size() > 0;
                     if (keepSearching) {
-                        searchAfterValue = subsequentSearchResult.getCases()
-                            .get(subsequentSearchResult.getCases().size() - 1)
-                            .getId().toString();
+                        searchAfterValue = caseDetails.get(caseDetails.size() - 1).getId().toString();
                     }
                 }
             } while (keepSearching);
