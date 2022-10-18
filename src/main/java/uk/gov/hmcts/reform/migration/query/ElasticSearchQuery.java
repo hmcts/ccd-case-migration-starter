@@ -13,7 +13,7 @@ public class ElasticSearchQuery {
           "_source": [
             "reference"
           ],
-          "size": 100,
+          "size": %s,
           "sort": [
             {
               "reference.keyword": "asc"
