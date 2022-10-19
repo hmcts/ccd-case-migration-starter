@@ -90,6 +90,10 @@ public class CaseMigrationProcessor {
         if (!StringUtils.hasText(caseType)) {
             throw new CaseMigrationException("Provide case type for the migration");
         }
+
+        if (caseType.split(",").length > 1) {
+            throw new CaseMigrationException("Only One case type at a time is allowed for the migration");
+        }
     }
 
     private void updateCase(String authorisation, String caseType, CaseDetails caseDetails) {

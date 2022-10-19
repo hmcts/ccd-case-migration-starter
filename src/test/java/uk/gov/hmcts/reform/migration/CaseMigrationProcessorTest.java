@@ -108,4 +108,10 @@ public class CaseMigrationProcessorTest {
     public void shouldThrowExceptionWhenCaseTypeNull() {
         assertThrows(CaseMigrationException.class, () -> caseMigrationProcessor.migrateCases(null));
     }
+
+    @Test
+    public void shouldThrowExceptionWhenMultipleCaseTypesPassed() {
+        assertThrows(CaseMigrationException.class, () ->
+            caseMigrationProcessor.migrateCases("Cast_Type1,Cast_Type2"));
+    }
 }
