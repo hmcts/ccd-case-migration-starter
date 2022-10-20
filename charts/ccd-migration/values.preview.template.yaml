@@ -1,4 +1,9 @@
-java:
-  # Don't modify below here
+job:
   image: ${IMAGE_NAME}
   ingressHost: ${SERVICE_FQDN}
+  kind: CronJob
+  schedule: "*/20 * * * *"
+  startingDeadlineSeconds: 180
+  concurrencyPolicy: Forbid
+global:
+  jobKind: CronJob
