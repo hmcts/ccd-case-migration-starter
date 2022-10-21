@@ -3,11 +3,10 @@ package uk.gov.hmcts.reform.migration.service;
 import org.springframework.stereotype.Service;
 import uk.gov.hmcts.reform.ccd.client.model.CaseDetails;
 
-import java.util.Map;
 import java.util.function.Predicate;
 
 @Service
-public class DataMigrationServiceImpl implements DataMigrationService<Map<String, Object>> {
+public class DataMigrationServiceImpl implements DataMigrationService<CaseDetails> {
 
     @Override
     public Predicate<CaseDetails> accepts() {
@@ -15,7 +14,7 @@ public class DataMigrationServiceImpl implements DataMigrationService<Map<String
     }
 
     @Override
-    public Map<String, Object> migrate(Map<String, Object> data) {
-        return data;
+    public CaseDetails migrate(CaseDetails caseDetails) {
+        return caseDetails;
     }
 }

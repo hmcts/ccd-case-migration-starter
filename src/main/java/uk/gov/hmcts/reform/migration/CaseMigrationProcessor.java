@@ -8,6 +8,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import uk.gov.hmcts.reform.ccd.client.model.CaseDetails;
 import uk.gov.hmcts.reform.domain.exception.CaseMigrationException;
+import uk.gov.hmcts.reform.domain.exception.CaseNotFoundException;
 import uk.gov.hmcts.reform.migration.ccd.CoreCaseDataService;
 import uk.gov.hmcts.reform.migration.repository.ElasticSearchRepository;
 import uk.gov.hmcts.reform.migration.repository.IdamRepository;
@@ -15,7 +16,6 @@ import uk.gov.hmcts.reform.migration.service.DataMigrationService;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 @Slf4j
 @Component
@@ -29,7 +29,7 @@ public class CaseMigrationProcessor {
     private CoreCaseDataService coreCaseDataService;
 
     @Autowired
-    private DataMigrationService<Map<String, Object>> dataMigrationService;
+    private DataMigrationService<CaseDetails> dataMigrationService;
 
     @Autowired
     private ElasticSearchRepository elasticSearchRepository;
@@ -49,7 +49,7 @@ public class CaseMigrationProcessor {
     public void migrateCases(String caseType) {
         validateCaseType(caseType);
         log.info("Data migration of cases started for case type: {}", caseType);
-        String userToken =  idamRepository.generateUserToken();
+        String userToken = idamRepository.generateUserToken();
         List<CaseDetails> listOfCaseDetails = elasticSearchRepository.findCaseByCaseType(userToken, caseType);
         listOfCaseDetails.stream()
             .limit(caseProcessLimit)
@@ -108,7 +108,7 @@ public class CaseMigrationProcessor {
                     EVENT_SUMMARY,
                     EVENT_DESCRIPTION,
                     caseType,
-                    caseDetails
+                    dataMigrationService.migrate(caseDetails)
                 );
                 log.info("Case {} successfully updated", id);
                 migratedCases.add(id);
@@ -118,6 +118,26 @@ public class CaseMigrationProcessor {
             }
         } else {
             log.info("Case {} does not meet criteria for migration", caseDetails.getId());
+        }
+    }
+
+    public void migrateSingleCase(String caseType, String caseId) {
+        try {
+            validateCaseType(caseType);
+            String userToken = idamRepository.generateUserToken();
+            CaseDetails caseDetails = coreCaseDataService.fetchOne(
+                userToken,
+                caseId
+            ).orElseThrow(CaseNotFoundException::new);
+            if (dataMigrationService.accepts().test(caseDetails)) {
+                updateCase(userToken, caseType, caseDetails);
+            } else {
+                log.info("Case {} already migrated", caseDetails.getId());
+            }
+        } catch (CaseNotFoundException ex) {
+            log.error("Case {} not found due to: {}", caseId, ex.getMessage());
+        } catch (Exception exception) {
+            log.error(exception.getMessage());
         }
     }
 }

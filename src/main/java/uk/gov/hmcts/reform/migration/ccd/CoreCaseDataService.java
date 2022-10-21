@@ -1,5 +1,6 @@
 package uk.gov.hmcts.reform.migration.ccd;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import uk.gov.hmcts.reform.authorisation.generators.AuthTokenGenerator;
@@ -12,6 +13,9 @@ import uk.gov.hmcts.reform.idam.client.IdamClient;
 import uk.gov.hmcts.reform.idam.client.models.UserDetails;
 import uk.gov.hmcts.reform.migration.auth.AuthUtil;
 
+import java.util.Optional;
+
+@Slf4j
 @Service
 public class CoreCaseDataService {
 
@@ -21,6 +25,15 @@ public class CoreCaseDataService {
     private AuthTokenGenerator authTokenGenerator;
     @Autowired
     private CoreCaseDataApi coreCaseDataApi;
+
+    public Optional<CaseDetails> fetchOne(String authorisation, String caseId) {
+        try {
+            return Optional.ofNullable(coreCaseDataApi.getCase(authorisation, authTokenGenerator.generate(), caseId));
+        } catch (Exception ex) {
+            log.error("Case {} not found due to: {}", caseId, ex.getMessage());
+        }
+        return Optional.empty();
+    }
 
     public CaseDetails update(String authorisation, String eventId,
                               String eventSummary,

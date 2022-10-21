@@ -5,9 +5,6 @@ import org.junit.runner.RunWith;
 import org.mockito.junit.MockitoJUnitRunner;
 import uk.gov.hmcts.reform.ccd.client.model.CaseDetails;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -34,15 +31,15 @@ public class DataMigrationServiceImplTest {
 
     @Test
     public void shouldReturnPassedDataWhenMigrateCalled() {
-        Map<String, Object> data = new HashMap<>();
-        Map<String, Object> result = service.migrate(data);
+        CaseDetails caseDetails = CaseDetails.builder().build();
+        CaseDetails result = service.migrate(caseDetails);
         assertNotNull(result);
-        assertEquals(data, result);
+        assertEquals(caseDetails, result);
     }
 
     @Test
     public void shouldReturnNullWhenDataIsNotPassed() {
-        Map<String, Object> result = service.migrate(null);
+        CaseDetails result = service.migrate(null);
         assertNull(result);
         assertEquals(null, result);
     }

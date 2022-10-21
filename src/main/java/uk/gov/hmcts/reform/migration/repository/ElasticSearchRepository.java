@@ -37,20 +37,9 @@ public class ElasticSearchRepository {
     }
 
     public List<CaseDetails> findCaseByCaseType(String userToken, String caseType) {
-        ElasticSearchQuery elasticSearchQuery = ElasticSearchQuery.builder()
-            .initialSearch(true)
-            .size(querySize)
-            .build();
-
-        log.info("Processing the Case Migration search for case type {}.", caseType);
-        String authToken = authTokenGenerator.generate();
-
-        SearchResult searchResult = coreCaseDataApi.searchCases(userToken,
-                                                                authToken,
-                                                                caseType, elasticSearchQuery.getQuery()
-        );
-
         List<CaseDetails> caseDetails = new ArrayList<>();
+        String authToken = authTokenGenerator.generate();
+        SearchResult searchResult = fetchFirstPage(userToken, authToken, caseType);
 
         if (searchResult != null && searchResult.getTotal() > 0) {
             List<CaseDetails> searchResultCases = searchResult.getCases();
@@ -59,17 +48,7 @@ public class ElasticSearchRepository {
 
             boolean keepSearching;
             do {
-                ElasticSearchQuery subsequentElasticSearchQuery = ElasticSearchQuery.builder()
-                    .initialSearch(false)
-                    .size(querySize)
-                    .searchAfterValue(searchAfterValue)
-                    .build();
-
-                SearchResult subsequentSearchResult =
-                    coreCaseDataApi.searchCases(userToken,
-                                                authToken,
-                                                caseType, subsequentElasticSearchQuery.getQuery()
-                    );
+                SearchResult subsequentSearchResult = fetchNextPage(userToken, caseType, authToken, searchAfterValue);
 
                 keepSearching = false;
                 if (subsequentSearchResult != null) {
@@ -83,5 +62,34 @@ public class ElasticSearchRepository {
         }
         log.info("The Case Migration has processed caseDetails {}.", caseDetails.size());
         return caseDetails;
+    }
+
+    public SearchResult fetchFirstPage(String userToken, String authToken, String caseType) {
+        ElasticSearchQuery elasticSearchQuery = ElasticSearchQuery.builder()
+            .initialSearch(true)
+            .size(querySize)
+            .build();
+
+        log.info("Processing the Case Migration search for case type {}.", caseType);
+
+        return coreCaseDataApi.searchCases(userToken,
+                                           authToken,
+                                           caseType, elasticSearchQuery.getQuery()
+        );
+    }
+
+    public SearchResult fetchNextPage(String userToken, String caseType, String authToken, String searchAfterValue) {
+        ElasticSearchQuery subsequentElasticSearchQuery = ElasticSearchQuery.builder()
+            .initialSearch(false)
+            .size(querySize)
+            .searchAfterValue(searchAfterValue)
+            .build();
+
+        SearchResult subsequentSearchResult =
+            coreCaseDataApi.searchCases(userToken,
+                                        authToken,
+                                        caseType, subsequentElasticSearchQuery.getQuery()
+            );
+        return subsequentSearchResult;
     }
 }

@@ -19,6 +19,7 @@ import java.util.List;
 
 import static org.junit.Assert.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -59,6 +60,7 @@ public class CaseMigrationProcessorTest {
         when(dataMigrationService.accepts()).thenReturn(candidate -> true);
         when(idamRepository.generateUserToken()).thenReturn(USER_TOKEN);
         CaseDetails details = mock(CaseDetails.class);
+        when(dataMigrationService.migrate(any(CaseDetails.class))).thenReturn(details);
         when(details.getId()).thenReturn(1677777777L);
         List<CaseDetails> caseDetails = new ArrayList<>();
         caseDetails.add(details);
@@ -85,6 +87,7 @@ public class CaseMigrationProcessorTest {
         CaseDetails details = mock(CaseDetails.class);
         when(details.getId()).thenReturn(1677777777L);
         CaseDetails details1 = mock(CaseDetails.class);
+        when(dataMigrationService.migrate(any(CaseDetails.class))).thenReturn(details);
         List<CaseDetails> caseDetails = new ArrayList<>();
         caseDetails.add(details);
         caseDetails.add(details1);
