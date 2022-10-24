@@ -8,11 +8,17 @@ import uk.gov.hmcts.reform.ccd.client.CoreCaseDataApi;
 import uk.gov.hmcts.reform.ccd.client.model.CaseDataContent;
 import uk.gov.hmcts.reform.ccd.client.model.CaseDetails;
 import uk.gov.hmcts.reform.ccd.client.model.Event;
+import uk.gov.hmcts.reform.ccd.client.model.PaginatedSearchMetadata;
 import uk.gov.hmcts.reform.ccd.client.model.StartEventResponse;
 import uk.gov.hmcts.reform.idam.client.IdamClient;
 import uk.gov.hmcts.reform.idam.client.models.UserDetails;
+import uk.gov.hmcts.reform.migration.MigrationProperties;
 import uk.gov.hmcts.reform.migration.auth.AuthUtil;
 
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Slf4j
@@ -25,6 +31,8 @@ public class CoreCaseDataService {
     private AuthTokenGenerator authTokenGenerator;
     @Autowired
     private CoreCaseDataApi coreCaseDataApi;
+    @Autowired
+    private MigrationProperties migrationProperties;
 
     public Optional<CaseDetails> fetchOne(String authorisation, String caseId) {
         try {
@@ -33,6 +41,32 @@ public class CoreCaseDataService {
             log.error("Case {} not found due to: {}", caseId, ex.getMessage());
         }
         return Optional.empty();
+    }
+
+    public int getNumberOfPages(String authorisation, String userId, Map<String, String> searchCriteria) {
+        PaginatedSearchMetadata metadata = coreCaseDataApi.getPaginationInfoForSearchForCaseworkers(
+            authorisation,
+            authTokenGenerator.generate(),
+            userId,
+            migrationProperties.getJurisdiction(),
+            migrationProperties.getCaseType(),
+            searchCriteria
+        );
+        return metadata.getTotalPagesCount();
+    }
+
+    public List<CaseDetails> fetchPage(String authorisation, String userId, int pageNumber) {
+        try {
+            Map<String, String> searchCriteria = new HashMap<>();
+            searchCriteria.put("page", String.valueOf(pageNumber));
+            return coreCaseDataApi.searchForCaseworker(authorisation, authTokenGenerator.generate(), userId,
+                                                       migrationProperties.getJurisdiction(),
+                                                       migrationProperties.getCaseType(), searchCriteria
+            );
+        } catch (Exception e) {
+            log.error("Fetching of cases failed for the page no {} due to: {}", pageNumber, e.getMessage());
+        }
+        return Collections.emptyList();
     }
 
     public CaseDetails update(String authorisation, String eventId,
@@ -50,7 +84,8 @@ public class CoreCaseDataService {
             caseDetails.getJurisdiction(),
             caseType,
             caseId,
-            eventId);
+            eventId
+        );
 
         CaseDataContent caseDataContent = CaseDataContent.builder()
             .eventToken(startEventResponse.getToken())
@@ -71,6 +106,7 @@ public class CoreCaseDataService {
             caseType,
             caseId,
             true,
-            caseDataContent);
+            caseDataContent
+        );
     }
 }
