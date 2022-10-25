@@ -1,39 +1,34 @@
 # ccd-case-migration-starter
 
-Starter project for data migrations within CCD
+CCD Case Migration Starter provides a framework for data migrations within CCD , to assist with case migrations that are required when the case definition changes in a way that requires existing cases to be updated to match the new case definition.
 
-## Artifacts
-
-The following artifacts are produced:
-
-- processor framework `uk.gov.hmcts.reform.ccd-case-migration:processor`
-- domain classes `uk.gov.hmcts.reform.ccd-case-migration:domain`
-
-### Processor framework
-
-Package offers framework for data migrations within CCD that runs the following process:
+The framework runs the following process :-
 
 ![diagram](docs/process.png)
 
-### Domain classes
+The source code is maintained as a template within GitHub and is typically either cloned by a service team to establish a migration capability , or branched within the repository.
 
-Package offers base domain classes for standardised case data structures such as party, telephone number etc.
+CCD Case Migration Starter framework source code is located in HMCTS GitHub repository  https://github.com/hmcts/ccd-case-migration-starter
+
+It is built by Jenkins using HMCTS Jenkins job  https://build.platform.hmcts.net/job/HMCTS_a_to_c/job/ccd-case-migration-starter/
 
 ## Getting started
 
-Assuming that you have Java project scaffolding please include framework artifact as a project dependency by adding following line:
+To utilise the CCD Case Migration Starter :-
 
-```groovy
-compile group: 'uk.gov.hmcts.reform.ccd-case-migration', name: 'processor', version: '3.0.0'
-```
+1. Clone the GitHub repository and create a branch for the migration task.
 
-If you want to take advantages of standard domain classes please also include domain artifact as a project dependency by adding following line:
+2. Make the required source code changes for the migration task (see section below).
 
-```groovy
-compile group: 'uk.gov.hmcts.reform.ccd-case-migration', name: 'domain', version: '3.0.0'
-```
+3. Create a pull request.
 
-Having done above please create class that implements `uk.gov.hmcts.reform.migration.service.DataMigrationService` interface in similar way as shown below:
+4. Request PlatOps to copy the JAR that was built using the pipeline from the repository to the bastion server for operation.
+
+## Required source code changes
+
+As a minimum , the source code changes described below should be made.
+
+Create a Java class which implements `uk.gov.hmcts.reform.migration.service.DataMigrationService` interface in similar way as shown below :-
 
 ```java
 package uk.gov.hmcts.reform.migration.service;
@@ -57,7 +52,7 @@ public class DataMigrationServiceImpl implements DataMigrationService {
 }
 ```
 
-Finally add configuration file with the following entries:
+Ensure that the application properties below are configured as required in `application.properties` file :-
 
 ```properties
 idam.api.url= # IDAM API URL used to authenticate system update user (pointing to localhost version of IDAM API by default)
@@ -75,21 +70,19 @@ migration.idam.username= # IDAM username of a system update user that performs d
 migration.idam.password= # IDAM password of a system update user that performs data migration
 migration.jurisdiction= # CCD jurisdiction that data migration is run against
 migration.casetype= # CCD case type that data migration is run against
+migration.caseId= # optional CCD case ID in case only one case needs to be migrated
+
+case-migration.elasticsearch.querySize= # Elasticsearch query size limit
+case-migration.processing.limit= # Migration processing size limit
 ```
 
-## Future development
+## Unit tests
 
-### Unit tests
-
-To run all unit tests please execute following command:
+To run all unit tests please execute following command :-
 
 ```bash
     ./gradlew test
 ```
-
-## Versioning
-
-We use [SemVer](http://semver.org/) for versioning. For the versions available, see the tags on this repository.
 
 ## License
 
