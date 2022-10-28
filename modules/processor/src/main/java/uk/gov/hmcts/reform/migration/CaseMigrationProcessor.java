@@ -17,9 +17,9 @@ import java.util.stream.IntStream;
 @Slf4j
 @Component
 public class CaseMigrationProcessor {
-    private static final String EVENT_ID = "migrateCase";
-    private static final String EVENT_SUMMARY = "Migrate Case";
-    private static final String EVENT_DESCRIPTION = "Migrate Case";
+    private static final String EVENT_ID = "migrateCaseTTL";
+    private static final String EVENT_SUMMARY = "Migrate Case TTL";
+    private static final String EVENT_DESCRIPTION = "Migrate Case TTL";
 
     @Autowired
     private CoreCaseDataService coreCaseDataService;

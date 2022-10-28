@@ -8,9 +8,10 @@ dependencies {
   compile group: 'org.springframework', name: 'spring-context-support'
   compile group: 'com.fasterxml.jackson.module', name: 'jackson-module-parameter-names'
   compile group: 'uk.gov.hmcts.reform', name: 'java-logging', version: '5.0.1'
+  compile group: 'com.github.hmcts', name: 'idam-java-client', version: '2.0.1'
   compile group: 'uk.gov.hmcts.reform', name: 'idam-client', version: '1.0.2'
   compile group: 'uk.gov.hmcts.reform', name: 'service-auth-provider-client', version: '3.0.0'
-  compile group: 'uk.gov.hmcts.reform', name: 'core-case-data-store-client', version: '4.7.3'
+  compile group: 'com.github.hmcts', name: 'core-case-data-store-client', version: '4.9.1'
   compile group: 'io.rest-assured', name: 'rest-assured', version: '3.3.0'
 
   testCompile group: 'org.springframework.boot', name: 'spring-boot-starter-test'

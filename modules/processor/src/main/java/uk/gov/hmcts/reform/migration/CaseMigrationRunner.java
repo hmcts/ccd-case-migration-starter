@@ -44,7 +44,7 @@ public class CaseMigrationRunner implements CommandLineRunner {
     @Override
     public void run(String... args) {
         try {
-            String userToken = idamClient.authenticateUser(idamUsername, idamPassword);
+            String userToken = idamClient.getAccessToken(idamUsername, idamPassword);
             log.debug("User token: {}", userToken);
             UserDetails userDetails = idamClient.getUserDetails(userToken);
             String userId = userDetails.getId();

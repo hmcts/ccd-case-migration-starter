@@ -8,6 +8,7 @@ import uk.gov.hmcts.reform.authorisation.generators.AuthTokenGenerator;
 import uk.gov.hmcts.reform.ccd.client.CoreCaseDataApi;
 import uk.gov.hmcts.reform.ccd.client.model.CaseDataContent;
 import uk.gov.hmcts.reform.ccd.client.model.CaseDetails;
+import uk.gov.hmcts.reform.ccd.client.model.CaseResource;
 import uk.gov.hmcts.reform.ccd.client.model.Event;
 import uk.gov.hmcts.reform.ccd.client.model.PaginatedSearchMetadata;
 import uk.gov.hmcts.reform.ccd.client.model.StartEventResponse;
@@ -67,7 +68,7 @@ public class CoreCaseDataService {
         return Collections.emptyList();
     }
 
-    public CaseDetails update(String authorisation, String caseId, String eventId, String eventSummary, String eventDescription, Object data) {
+    public CaseResource update(String authorisation, String caseId, String eventId, String eventSummary, String eventDescription, Object data) {
         UserDetails userDetails = idamClient.getUserDetails(AuthUtil.getBearerToken(authorisation));
 
         StartEventResponse startEventResponse = coreCaseDataApi.startEventForCaseWorker(
@@ -90,14 +91,9 @@ public class CoreCaseDataService {
             ).data(data)
             .build();
 
-        return coreCaseDataApi.submitEventForCaseWorker(
-            AuthUtil.getBearerToken(authorisation),
+        return coreCaseDataApi.createEvent(AuthUtil.getBearerToken(authorisation),
             authTokenGenerator.generate(),
-            userDetails.getId(),
-            jurisdiction,
-            caseType,
             caseId,
-            true,
             caseDataContent);
     }
 }
