@@ -9,5 +9,5 @@ import java.util.function.Predicate;
 public interface DataMigrationService<T> {
     Predicate<CaseDetails> accepts();
 
-    T migrate(User user, CaseDetails caseDetails);
+    T migrate(User user, CaseDetails caseDetails, String caseType);
 }

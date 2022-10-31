@@ -30,7 +30,7 @@ public class CaseMigrationProcessor {
     @Getter
     private List<Long> failedCases = new ArrayList<>();
 
-    public void processSingleCase(User user, String caseId) {
+    public void processSingleCase(User user, String caseId, String caseType) {
         CaseDetails caseDetails;
         try {
             caseDetails = coreCaseDataService.fetchOne(user.getAuthToken(), caseId);
@@ -39,19 +39,19 @@ public class CaseMigrationProcessor {
             return;
         }
         if (dataMigrationService.accepts().test(caseDetails)) {
-            updateCase(user, caseDetails);
+            updateCase(user, caseDetails, caseType);
         } else {
             log.info("Case {} already migrated", caseDetails.getId());
         }
     }
 
-    public void processAllCases(User user) {
+    public void processAllCases(User user, String caseType) {
         coreCaseDataService.fetchAll(user.getAuthToken(), user.getUserDetails().getId()).stream()
             .filter(dataMigrationService.accepts())
-            .forEach(caseDetails -> updateCase(user, caseDetails));
+            .forEach(caseDetails -> updateCase(user, caseDetails, caseType));
     }
 
-    public void processAllCasesPageByPage(User user) {
+    public void processAllCasesPageByPage(User user, String caseType) {
         String authToken = user.getAuthToken();
         String userId = user.getUserDetails().getId();
         int numberOfPages = coreCaseDataService.getNumberOfPages(authToken, userId, new HashMap<>());
@@ -63,16 +63,16 @@ public class CaseMigrationProcessor {
             )
             .flatMap(pageNumber -> coreCaseDataService.fetchPage(authToken, userId, pageNumber).stream())
             .filter(dataMigrationService.accepts())
-            .forEach(caseDetails -> updateCase(user, caseDetails));
+            .forEach(caseDetails -> updateCase(user, caseDetails, caseType));
     }
 
-    private void updateCase(User user, CaseDetails caseDetails) {
+    private void updateCase(User user, CaseDetails caseDetails, String caseType) {
         Long id = caseDetails.getId();
         log.info("Updating case {}", id);
         try {
             log.debug("Case data: {}", caseDetails.getData());
             coreCaseDataService.update(user.getAuthToken(), id.toString(),
-                EVENT_ID, EVENT_SUMMARY, EVENT_DESCRIPTION, dataMigrationService.migrate(user, caseDetails));
+                EVENT_ID, EVENT_SUMMARY, EVENT_DESCRIPTION, dataMigrationService.migrate(user, caseDetails, caseType));
             log.info("Case {} successfully updated", id);
             migratedCases.add(id);
         } catch (Exception e) {

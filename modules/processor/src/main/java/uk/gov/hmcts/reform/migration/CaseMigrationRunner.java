@@ -26,6 +26,8 @@ public class CaseMigrationRunner implements CommandLineRunner {
     private String idamPassword;
     @Value("${migration.caseId:}")
     private String ccdCaseId;
+    @Value("${migration.caseType:}")
+    private String caseType;
 
     @Value("${migration.caseIds:}")
     private String ccdCaseIds;
@@ -53,7 +55,7 @@ public class CaseMigrationRunner implements CommandLineRunner {
 
             if (ccdCaseId != null && !ccdCaseId.isBlank()) {
                 log.info("Data migration of single case started");
-                caseMigrationProcessor.processSingleCase(user, ccdCaseId);
+                caseMigrationProcessor.processSingleCase(user, ccdCaseId, caseType);
             } else if (ccdCaseIds != null && !ccdCaseIds.isBlank()) {
                 log.info("Data migration of list of cases started");
                 List<String> caseIdsList = Stream.of(ccdCaseIds.split(","))
@@ -61,16 +63,16 @@ public class CaseMigrationRunner implements CommandLineRunner {
                     .collect(Collectors.toList());
                 log.info("Total case ids provided: " + caseIdsList.size());
                 caseIdsList.stream().forEach(caseId -> {
-                    caseMigrationProcessor.processSingleCase(user, caseId);
+                    caseMigrationProcessor.processSingleCase(user, caseId, caseType);
                 });
 
             } else {
                 if (pageByPage) {
                     log.info("Data migration of all cases page by page started");
-                    caseMigrationProcessor.processAllCasesPageByPage(user);
+                    caseMigrationProcessor.processAllCasesPageByPage(user, caseType);
                 } else {
                     log.info("Data migration of all cases started");
-                    caseMigrationProcessor.processAllCases(user);
+                    caseMigrationProcessor.processAllCases(user, caseType);
                 }
             }
 
