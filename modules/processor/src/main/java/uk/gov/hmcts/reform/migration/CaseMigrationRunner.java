@@ -35,6 +35,8 @@ public class CaseMigrationRunner implements CommandLineRunner {
     private boolean migrateCaseNameInternalFlag;
     @Value("${migration.migrateCaseFlagsInternal}")
     private boolean migrateCaseFlagsInternalFlag;
+    @Value("${migration.migrateLegacyCaseFlag}")
+    private boolean migrateLegacyCaseFlag;
     private final IdamClient idamClient;
     private final CaseMigrationProcessor caseMigrationProcessor;
 
@@ -64,7 +66,7 @@ public class CaseMigrationRunner implements CommandLineRunner {
             } else {
                 log.info("Data migration of cases started");
                 caseMigrationProcessor.fetchAndProcessCases(userToken, dryrun, numThreads, pageParams,
-                    getMigrationEvent(), migrateCaseNameInternalFlag, migrateCaseFlagsInternalFlag);
+                    getMigrationEvent(), migrateCaseNameInternalFlag, migrateCaseFlagsInternalFlag, migrateLegacyCaseFlag);
             }
 
             stopWatch.stop();
@@ -95,6 +97,9 @@ public class CaseMigrationRunner implements CommandLineRunner {
         }
         else if (migrateCaseFlagsInternalFlag) {
             return MigrationEvent.MIGRATE_CASE_FLAGS;
+        }
+        else if (migrateLegacyCaseFlag){
+            return MigrationEvent.MIGRATE_TO_LEGACY_CASE_FLAGS;
         }
         else {
             return MigrationEvent.MIGRATE_WORK_ALLOCATION_R3;
