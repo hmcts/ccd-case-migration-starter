@@ -6,6 +6,8 @@ import com.fasterxml.jackson.annotation.JsonValue;
 public enum MigrationEvent {
     MIGRATE_WORK_ALLOCATION_R3("migrateWorkAllocationR3"),
     MIGRATE_CASE_FLAGS("migrateCaseFlags"),
+    MIGRATE_TO_LEGACY_CASE_FLAGS("migrateToLegacyCaseFlags"),
+
 
     @JsonEnumDefaultValue
     UNKNOWN_MIGRATION("unknownMigration");

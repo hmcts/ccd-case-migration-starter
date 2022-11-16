@@ -53,6 +53,13 @@ public class CcdElasticSearchQueries {
             .sort(REFERENCE_KEYWORD, SortOrder.ASC);
     }
 
+    public static SearchSourceBuilder fetchAllExistingCaseFlagCasesQuery() {
+        return SearchSourceBuilder.searchSource()
+            .size(1)
+            .query(existingCaseFlagsQuery())
+            .sort(REFERENCE_KEYWORD, SortOrder.ASC);
+    }
+
     public static BoolQueryBuilder missingSearchCriteriaFieldsQuery() {
         return QueryBuilders.boolQuery()
             .mustNot(
@@ -84,6 +91,13 @@ public class CcdElasticSearchQueries {
                 QueryBuilders.boolQuery()
                     .should(existsQuery("data.caseLevelFlags"))
                     .should(existsQuery("data.appellantLevelFlags")));
+    }
+
+    public static BoolQueryBuilder existingCaseFlagsQuery() {
+        return QueryBuilders.boolQuery()
+            .must(
+                QueryBuilders.boolQuery()
+                    .should(existsQuery("data.caseFlags")));
     }
 
     public static SearchSourceBuilder pageForUnsetCaseAccessManagementFieldsFieldsQuery(int pageSize) {

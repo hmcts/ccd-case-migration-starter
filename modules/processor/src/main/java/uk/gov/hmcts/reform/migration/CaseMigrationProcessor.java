@@ -69,7 +69,7 @@ public class CaseMigrationProcessor {
 
     public void fetchAndProcessCases(String userToken, boolean dryRun, int numThreads, MigrationPageParams pageParams,
                                      MigrationEvent migrationEvent, boolean migrateCaseNameInternalFlag,
-                                     boolean migrateCaseFlagsInternalFlag)
+                                     boolean migrateCaseFlagsInternalFlag, boolean migrateLegacyCaseFlag)
         throws InterruptedException {
 
         eventId = migrationEvent;
@@ -85,6 +85,10 @@ public class CaseMigrationProcessor {
         if (migrationEvent.equals(MigrationEvent.MIGRATE_CASE_FLAGS) && migrateCaseFlagsInternalFlag){
             currentQuery = fetchAllUnmigratedCaseFlagsInternalCasesQuery();
             queryBuilder = (BoolQueryBuilder) fetchAllUnmigratedCaseFlagsInternalCasesQuery().query();
+        }
+
+        if (migrateLegacyCaseFlag){
+            currentQuery = fetchAllExistingCaseFlagCasesQuery();
         }
 
         SearchResult initialSearch = coreCaseDataService.searchCases(userToken,
