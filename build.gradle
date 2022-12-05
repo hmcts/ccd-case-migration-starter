@@ -162,15 +162,6 @@ dependencyCheck {
     // Disable scanning of .NET related binaries
     assemblyEnabled = false
   }
-  skipConfigurations = [
-    "checkstyle",
-    "compileOnly",
-    "integrationTest",
-    "functionalTest",
-    "smokeTest",
-    "contractTestRuntimeClasspath",
-    "contractTestCompileClasspath"
-  ]
 }
 
 repositories {
