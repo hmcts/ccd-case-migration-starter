@@ -209,7 +209,7 @@ dependencies {
   testImplementation group:'org.mockito', name: 'mockito-junit-jupiter', version:'3.6.0'
   testImplementation group: 'org.powermock', name: 'powermock-api-mockito2', version: powermockVersion
   testImplementation group: 'org.powermock', name: 'powermock-module-junit4', version: powermockVersion
-  testRuntimeOnly "org.junit.platform:junit-platform-commons:1.7.0"
+  testRuntimeOnly "org.junit.platform:junit-platform-commons:1.9.1"
   implementation group: 'org.projectlombok', name: 'lombok', version: lombokVersion
   annotationProcessor group: 'org.projectlombok', name: 'lombok', version: lombokVersion
   testAnnotationProcessor group: 'org.projectlombok', name: 'lombok', version: lombokVersion
