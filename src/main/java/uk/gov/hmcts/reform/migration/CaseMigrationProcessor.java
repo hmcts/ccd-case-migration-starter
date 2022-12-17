@@ -1,123 +1,104 @@
 package uk.gov.hmcts.reform.migration;
 
-import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
-import org.springframework.util.StringUtils;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.stereotype.Service;
 import uk.gov.hmcts.reform.ccd.client.model.CaseDetails;
-import uk.gov.hmcts.reform.domain.exception.CaseMigrationException;
+import uk.gov.hmcts.reform.domain.exception.CaseNotFoundException;
+import uk.gov.hmcts.reform.idam.client.models.User;
 import uk.gov.hmcts.reform.migration.ccd.CoreCaseDataService;
-import uk.gov.hmcts.reform.migration.repository.ElasticSearchRepository;
-import uk.gov.hmcts.reform.migration.repository.IdamRepository;
 import uk.gov.hmcts.reform.migration.service.DataMigrationService;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.HashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
+import java.util.stream.IntStream;
+
+import static java.util.Optional.ofNullable;
 
 @Slf4j
-@Component
-public class CaseMigrationProcessor {
-    private static final String EVENT_ID = "migrateCase";
-    private static final String EVENT_SUMMARY = "Migrate Case";
-    private static final String EVENT_DESCRIPTION = "Migrate Case";
-    public static final String LOG_STRING = "-----------------------------------------";
+@Service
+@RequiredArgsConstructor
+@ConditionalOnProperty(prefix = "migration", name = "elasticsearch", havingValue = "false")
+public class CaseMigrationProcessor implements MigrationProcessor {
+    private static final int DEFAULT_MAX_CASES_TO_PROCESS = 100000;
+    private static final int DEFAULT_THREAD_LIMIT = 10;
+    private final CoreCaseDataService coreCaseDataService;
+    private final DataMigrationService<CaseDetails> dataMigrationService;
+    private final MigrationProperties migrationProperties;
 
-    @Autowired
-    private CoreCaseDataService coreCaseDataService;
+    @Override
+    public void process(User user) throws InterruptedException {
+        String authToken = user.getAuthToken();
+        String userId = user.getUserDetails().getId();
+        int numberOfPages = coreCaseDataService.getNumberOfPages(authToken, userId, new HashMap<>());
+        log.info("Total no of pages: {}", numberOfPages);
+        int numberOfThreads = ofNullable(migrationProperties.getNumThreads()).orElse(DEFAULT_THREAD_LIMIT);
 
-    @Autowired
-    private DataMigrationService<Map<String, Object>> dataMigrationService;
+        ExecutorService executorService = Executors.newFixedThreadPool(numberOfThreads);
+        IntStream.rangeClosed(1, numberOfPages).boxed()
+            .peek(pageNo ->
+                      log.info("Fetching cases for the page no {} of total {}", pageNo, numberOfPages)
+            )
+            .flatMap(pageNumber -> coreCaseDataService.fetchPage(authToken, userId, pageNumber).stream())
+            .filter(dataMigrationService.accepts())
+            .limit(ofNullable(migrationProperties.getMaxCasesToProcess()).orElse(DEFAULT_MAX_CASES_TO_PROCESS))
+            .forEach(submitMigration(authToken, executorService));
 
-    @Autowired
-    private ElasticSearchRepository elasticSearchRepository;
-
-    @Autowired
-    private IdamRepository idamRepository;
-
-    @Getter
-    private List<Long> migratedCases = new ArrayList<>();
-
-    @Getter
-    private List<Long> failedCases = new ArrayList<>();
-
-    @Value("${case-migration.processing.limit}")
-    private int caseProcessLimit;
-
-    public void migrateCases(String caseType) {
-        validateCaseType(caseType);
-        log.info("Data migration of cases started for case type: {}", caseType);
-        String userToken =  idamRepository.generateUserToken();
-        List<CaseDetails> listOfCaseDetails = elasticSearchRepository.findCaseByCaseType(userToken, caseType);
-        listOfCaseDetails.stream()
-            .limit(caseProcessLimit)
-            .forEach(caseDetails -> updateCase(userToken, caseType, caseDetails));
-        log.info(
-            """
-                {}
-                Data migration completed
-                {}
-                Total number of processed cases:
-                {}
-                Total number of migrations performed:
-                {}
-                {}
-                """,
-            LOG_STRING,
-            LOG_STRING,
-            getMigratedCases().size() + getFailedCases().size(),
-            getMigratedCases().size(),
-            LOG_STRING
-        );
-
-        if (getMigratedCases().isEmpty()) {
-            log.info("Migrated cases: NONE ");
-        } else {
-            log.info("Migrated cases: {} ", getMigratedCases());
-        }
-
-        if (getFailedCases().isEmpty()) {
-            log.info("Failed cases: NONE ");
-        } else {
-            log.info("Failed cases: {} ", getFailedCases());
-        }
-        log.info("Data migration of cases completed");
+        executorService.shutdown();
+        executorService.awaitTermination(Integer.MAX_VALUE, TimeUnit.DAYS);
     }
 
-    private void validateCaseType(String caseType) {
-        if (!StringUtils.hasText(caseType)) {
-            throw new CaseMigrationException("Provide case type for the migration");
-        }
+    private Consumer<CaseDetails> submitMigration(String authToken, ExecutorService executorService) {
+        return caseDetails ->
+            executorService.submit(() -> updateCase(authToken, caseDetails));
+    }
 
-        if (caseType.split(",").length > 1) {
-            throw new CaseMigrationException("Only One case type at a time is allowed for the migration");
+    public void migrateSingleCase(User user, String caseId) {
+        try {
+            validateCaseType(migrationProperties.getCaseType());
+            String userToken = user.getAuthToken();
+            CaseDetails caseDetails = coreCaseDataService.fetchOne(
+                userToken,
+                caseId
+            ).orElseThrow(CaseNotFoundException::new);
+            if (dataMigrationService.accepts().test(caseDetails)) {
+                updateCase(userToken, caseDetails);
+            } else {
+                log.info("Case {} already migrated", caseDetails.getId());
+            }
+        } catch (CaseNotFoundException ex) {
+            log.error("Case {} not found due to: {}", caseId, ex.getMessage());
+        } catch (Exception exception) {
+            log.error(exception.getMessage());
         }
     }
 
-    private void updateCase(String authorisation, String caseType, CaseDetails caseDetails) {
-        if (dataMigrationService.accepts().test(caseDetails)) {
-            Long id = caseDetails.getId();
-            log.info("Updating case {}", id);
-            try {
-                log.debug("Case data: {}", caseDetails.getData());
+    private void updateCase(String userToken, CaseDetails caseDetails) {
+        Long id = caseDetails.getId();
+        log.info("Updating case {}", id);
+        try {
+            log.debug("Case data: {}", caseDetails.getData());
+            if (!migrationProperties.isDryRun()) {
                 coreCaseDataService.update(
-                    authorisation,
+                    userToken,
+                    id.toString(),
                     EVENT_ID,
                     EVENT_SUMMARY,
                     EVENT_DESCRIPTION,
-                    caseType,
-                    caseDetails
+                    dataMigrationService.migrate(caseDetails)
                 );
                 log.info("Case {} successfully updated", id);
-                migratedCases.add(id);
-            } catch (Exception e) {
-                log.error("Case {} update failed due to: {}", id, e.getMessage());
-                failedCases.add(id);
+            } else {
+                log.info("Case {} dry run migration", id);
             }
-        } else {
-            log.info("Case {} does not meet criteria for migration", caseDetails.getId());
+            migratedCases.add(id);
+        } catch (Exception e) {
+            log.error("Case {} update failed due to: {}", id, e.getMessage());
+            failedCases.add(id);
         }
     }
 }

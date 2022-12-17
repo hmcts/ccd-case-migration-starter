@@ -5,6 +5,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Repository;
 import uk.gov.hmcts.reform.idam.client.IdamClient;
+import uk.gov.hmcts.reform.idam.client.models.User;
+import uk.gov.hmcts.reform.idam.client.models.UserDetails;
 
 @Repository
 @Slf4j
@@ -29,4 +31,12 @@ public class IdamRepository {
         return idamClient.authenticateUser(idamUsername, idamPassword);
     }
 
+    public User authenticateUser() {
+        String userToken = this.generateUserToken();
+        UserDetails userDetails = idamClient.getUserDetails(userToken);
+        String userId = userDetails.getId();
+        log.debug("User ID: {}", userId);
+        User user = new User(userToken, userDetails);
+        return user;
+    }
 }
