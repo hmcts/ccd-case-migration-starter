@@ -21,6 +21,9 @@ java {
   }
 }
 
+dependencyCheck {
+  suppressionFile = 'dependency-check-suppressions.xml'
+}
 sourceSets {
   functionalTest {
     java {

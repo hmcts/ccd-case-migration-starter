@@ -25,6 +25,7 @@ public class ElasticSearchQuery {
                      {"match": { "state": "CaseCreated" }},
                      {"match": { "state": "CasePaymentFailed" }},
                      {"match": { "state": "Stopped" }},
+                     {"match": { "state": "Dormant" }},
                      {"match": { "state": "CasePrinted" }},
                      {"match": { "state": "BOReadyForExamination" }},
                      {"match": { "state": "BOExamining" }},
