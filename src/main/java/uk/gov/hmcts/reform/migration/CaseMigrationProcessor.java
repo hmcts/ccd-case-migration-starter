@@ -232,7 +232,7 @@ public class CaseMigrationProcessor {
                 log.info("Case {} successfully updated", id);
                 migratedCases.add(id);
             } catch (Exception e) {
-                log.error("Case {} update failed due to xxx: {}", id, e.getMessage());
+                log.error("Case {} update failed due to : {}", id, e.getMessage());
                 e.printStackTrace();
                 failedCases.add(id);
             }
