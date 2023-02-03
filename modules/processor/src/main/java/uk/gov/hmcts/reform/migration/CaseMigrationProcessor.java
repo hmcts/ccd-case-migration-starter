@@ -52,7 +52,8 @@ public class CaseMigrationProcessor {
     @Getter
     private Long totalCases = 0L;
 
-    public void processSingleCase(String userToken, String caseId, boolean dryRun) {
+    public void processSingleCase(String userToken, String caseId, boolean dryRun, MigrationEvent migrationEvent) {
+        eventId = migrationEvent;
         CaseDetails caseDetails;
         try {
             caseDetails = coreCaseDataService.fetchOne(userToken, caseId);
@@ -68,27 +69,37 @@ public class CaseMigrationProcessor {
     }
 
     public void fetchAndProcessCases(String userToken, boolean dryRun, int numThreads, MigrationPageParams pageParams,
-                                     MigrationEvent migrationEvent, boolean migrateCaseNameInternalFlag,
-                                     boolean migrateCaseFlagsInternalFlag, boolean migrateLegacyCaseFlag)
+                                     MigrationEvent migrationEvent)
         throws InterruptedException {
 
         eventId = migrationEvent;
 
-        SearchSourceBuilder currentQuery = fetchAllUnmigratedGlobalSearchCasesQuery();
-        BoolQueryBuilder queryBuilder = (BoolQueryBuilder) fetchAllUnmigratedGlobalSearchCasesQuery().query();
+        SearchSourceBuilder currentQuery;
+        BoolQueryBuilder queryBuilder;
 
-        if (migrationEvent.equals(MigrationEvent.MIGRATE_WORK_ALLOCATION_R3) && migrateCaseNameInternalFlag){
-            currentQuery = fetchAllCaseNameInternalCasesQuery();
-            queryBuilder = (BoolQueryBuilder) fetchAllCaseNameInternalCasesQuery().query();
-        }
-
-        if (migrationEvent.equals(MigrationEvent.MIGRATE_CASE_FLAGS) && migrateCaseFlagsInternalFlag){
-            currentQuery = fetchAllUnmigratedCaseFlagsInternalCasesQuery();
-            queryBuilder = (BoolQueryBuilder) fetchAllUnmigratedCaseFlagsInternalCasesQuery().query();
-        }
-
-        if (migrateLegacyCaseFlag){
-            currentQuery = fetchAllExistingCaseFlagCasesQuery();
+        switch (migrationEvent) {
+            case MIGRATE_WORK_ALLOCATION_R3:
+                currentQuery = fetchAllCaseNameInternalCasesQuery();
+                queryBuilder = (BoolQueryBuilder) fetchAllCaseNameInternalCasesQuery().query();
+                break;
+            case MIGRATE_GS_SEARCH_CRITERIA:
+                currentQuery = fetchAllUnmigratedGlobalSearchCasesQuery();
+                queryBuilder = (BoolQueryBuilder) fetchAllUnmigratedGlobalSearchCasesQuery().query();
+                break;
+            case MIGRATE_CASE_FLAGS:
+                currentQuery = fetchAllUnmigratedCaseFlagsInternalCasesQuery();
+                queryBuilder = (BoolQueryBuilder) fetchAllUnmigratedCaseFlagsInternalCasesQuery().query();
+                break;
+            case MIGRATE_TO_LEGACY_CASE_FLAGS:
+                currentQuery = fetchAllExistingCaseFlagCasesQuery();
+                queryBuilder = (BoolQueryBuilder) fetchAllExistingCaseFlagCasesQuery().query();
+                break;
+            case MIGRATE_CLEAR_CASE_FLAGS:
+                currentQuery = fetchAllExistingCaseFlagCasesQuery();
+                queryBuilder = (BoolQueryBuilder) fetchAllExistingLegacyCaseFlagCasesQuery().query();
+                break;
+            default:
+                throw new IllegalArgumentException("Migration type not specified");
         }
 
         SearchResult initialSearch = coreCaseDataService.searchCases(userToken,

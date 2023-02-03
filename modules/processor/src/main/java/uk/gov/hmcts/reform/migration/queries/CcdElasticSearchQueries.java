@@ -60,6 +60,12 @@ public class CcdElasticSearchQueries {
             .sort(REFERENCE_KEYWORD, SortOrder.ASC);
     }
 
+    public static SearchSourceBuilder fetchAllExistingLegacyCaseFlagCasesQuery() {
+        return SearchSourceBuilder.searchSource()
+            .query(existingLegacyCaseFlagsQuery())
+            .sort(REFERENCE_KEYWORD, SortOrder.ASC);
+    }
+
     public static BoolQueryBuilder missingSearchCriteriaFieldsQuery() {
         return QueryBuilders.boolQuery()
             .mustNot(
@@ -77,25 +83,35 @@ public class CcdElasticSearchQueries {
     public static BoolQueryBuilder caseFlagsInternalFieldsQuery() {
 
         return QueryBuilders.boolQuery()
-            .must(existsQuery("data.caseFlags"))
+            .must(existsQuery("data.legacyCaseFlags"))
             .must(QueryBuilders.boolQuery()
-                .should(QueryBuilders.matchQuery("data.caseFlags.value.caseFlagType", "anonymity"))
-                .should(QueryBuilders.matchQuery("data.caseFlags.value.caseFlagType", "complexCase"))
-                .should(QueryBuilders.matchQuery("data.caseFlags.value.caseFlagType", "detainedImmigrationAppeal"))
-                .should(QueryBuilders.matchQuery("data.caseFlags.value.caseFlagType", "foreignNationalOffender"))
-                .should(QueryBuilders.matchQuery("data.caseFlags.value.caseFlagType", "potentiallyViolentPerson"))
-                .should(QueryBuilders.matchQuery("data.caseFlags.value.caseFlagType", "unacceptableCustomerBehaviour"))
-                .should(QueryBuilders.matchQuery("data.caseFlags.value.caseFlagType", "unaccompaniedMinor"))
+                .should(QueryBuilders.matchQuery("data.legacyCaseFlags.value.legacyCaseFlagType", "anonymity"))
+                .should(QueryBuilders.matchQuery("data.legacyCaseFlags.value.legacyCaseFlagType", "complexCase"))
+                .should(QueryBuilders.matchQuery("data.legacyCaseFlags.value.legacyCaseFlagType", "detainedImmigrationAppeal"))
+                .should(QueryBuilders.matchQuery("data.legacyCaseFlags.value.legacyCaseFlagType", "foreignNationalOffender"))
+                .should(QueryBuilders.matchQuery("data.legacyCaseFlags.value.legacyCaseFlagType", "potentiallyViolentPerson"))
+                .should(QueryBuilders.matchQuery("data.legacyCaseFlags.value.legacyCaseFlagType", "unacceptableCustomerBehaviour"))
+                .should(QueryBuilders.matchQuery("data.legacyCaseFlags.value.legacyCaseFlagType", "unaccompaniedMinor"))
                 .minimumShouldMatch(1))
             .mustNot(
                 QueryBuilders.boolQuery()
-                    .should(existsQuery("data.caseLevelFlags"))
+                    .should(existsQuery("data.caseFlags.details"))
                     .should(existsQuery("data.appellantLevelFlags")));
     }
 
     public static BoolQueryBuilder existingCaseFlagsQuery() {
         return QueryBuilders.boolQuery()
             .must(
+                QueryBuilders.boolQuery()
+                    .should(existsQuery("data.caseFlags")));
+    }
+
+    public static BoolQueryBuilder existingLegacyCaseFlagsQuery() {
+        return QueryBuilders.boolQuery()
+            .must(
+                QueryBuilders.boolQuery()
+                    .should(existsQuery("data.legacyCaseFlags")))
+            .mustNot(
                 QueryBuilders.boolQuery()
                     .should(existsQuery("data.caseFlags")));
     }
