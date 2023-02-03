@@ -1,6 +1,9 @@
 package uk.gov.hmcts.reform.migration;
 
+import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Stream;
+
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.time.StopWatch;
 import org.slf4j.Logger;
@@ -37,6 +40,8 @@ public class CaseMigrationRunner implements CommandLineRunner {
     private boolean migrateCaseFlagsInternalFlag;
     @Value("${migration.migrateLegacyCaseFlag}")
     private boolean migrateLegacyCaseFlag;
+    @Value("${migration.clearCaseFlag}")
+    private boolean migrateClearCaseFlag;
     private final IdamClient idamClient;
     private final CaseMigrationProcessor caseMigrationProcessor;
 
@@ -61,12 +66,12 @@ public class CaseMigrationRunner implements CommandLineRunner {
             log.info("-----------------------------------------");
 
             if (ccdCaseId != null && !ccdCaseId.isBlank()) {
-                log.info("Data migration of single case started");
-                caseMigrationProcessor.processSingleCase(userToken, ccdCaseId, dryrun);
+                log.info("Data migration of single case id [{}] started", ccdCaseId);
+                caseMigrationProcessor.processSingleCase(userToken, ccdCaseId, dryrun, getMigrationEvent());
             } else {
                 log.info("Data migration of cases started");
                 caseMigrationProcessor.fetchAndProcessCases(userToken, dryrun, numThreads, pageParams,
-                    getMigrationEvent(), migrateCaseNameInternalFlag, migrateCaseFlagsInternalFlag, migrateLegacyCaseFlag);
+                    getMigrationEvent());
             }
 
             stopWatch.stop();
@@ -80,7 +85,8 @@ public class CaseMigrationRunner implements CommandLineRunner {
             log.info("Migrated cases: {} ", !caseMigrationProcessor.getMigratedCases().isEmpty()
                 ? caseMigrationProcessor.getMigratedCases()
                 : "NONE");
-            log.info("Failed cases: {}", caseMigrationProcessor.getFailedCases().size());
+            log.info("Number of Failed cases: {}", caseMigrationProcessor.getFailedCases().size());
+            log.info("Failed cases: {}", caseMigrationProcessor.getFailedCases());
             log.info("-----------------------------------------");
             log.info("Data migration completed in: {} minutes ({} seconds).",
                 stopWatch.getTime(TimeUnit.MINUTES), stopWatch.getTime(TimeUnit.SECONDS));
@@ -90,18 +96,23 @@ public class CaseMigrationRunner implements CommandLineRunner {
         }
     }
 
-    private MigrationEvent getMigrationEvent(){
+    private MigrationEvent getMigrationEvent() {
+        long flagsEnabled = Stream.of(migrateCaseNameInternalFlag, migrateCaseFlagsInternalFlag,
+            migrateLegacyCaseFlag, migrateClearCaseFlag).filter(b -> b).count();
 
-        if (migrateCaseNameInternalFlag){
+        if (flagsEnabled != 1) {
+            throw new IllegalArgumentException("Only a single migration flag at once is required.");
+        }
+
+        if (migrateCaseNameInternalFlag) {
             return MigrationEvent.MIGRATE_WORK_ALLOCATION_R3;
-        }
-        else if (migrateCaseFlagsInternalFlag) {
+        } else if (migrateCaseFlagsInternalFlag) {
             return MigrationEvent.MIGRATE_CASE_FLAGS;
-        }
-        else if (migrateLegacyCaseFlag){
+        } else if (migrateLegacyCaseFlag) {
             return MigrationEvent.MIGRATE_TO_LEGACY_CASE_FLAGS;
-        }
-        else {
+        } else if (migrateClearCaseFlag) {
+            return MigrationEvent.MIGRATE_CLEAR_CASE_FLAGS;
+        } else {
             return MigrationEvent.MIGRATE_WORK_ALLOCATION_R3;
         }
     }
