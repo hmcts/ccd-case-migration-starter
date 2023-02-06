@@ -63,9 +63,6 @@ public class ElasticSearchQueryTest {
                 ]
             }
           },
-          "_source": [
-            "reference"
-          ],
           "size": 100,
           "sort": [
             {
@@ -128,9 +125,6 @@ public class ElasticSearchQueryTest {
                 ]
             }
           },
-          "_source": [
-            "reference"
-          ],
           "size": 100,
           "sort": [
             {

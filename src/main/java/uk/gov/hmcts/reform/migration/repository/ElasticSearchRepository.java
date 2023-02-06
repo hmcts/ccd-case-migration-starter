@@ -12,6 +12,7 @@ import uk.gov.hmcts.reform.migration.query.ElasticSearchQuery;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 @Slf4j
@@ -36,6 +37,15 @@ public class ElasticSearchRepository {
         this.caseProcessLimit = caseProcessLimit;
     }
 
+    public Optional<CaseDetails> findCaseByCaseId(String authorisation, String caseId) {
+        try {
+            return Optional.ofNullable(coreCaseDataApi.getCase(authorisation, authTokenGenerator.generate(), caseId));
+        } catch (Exception ex) {
+            log.error("Case {} not found due to: {}", caseId, ex.getMessage());
+        }
+        return Optional.empty();
+    }
+
     public List<CaseDetails> findCaseByCaseType(String userToken, String caseType) {
         ElasticSearchQuery elasticSearchQuery = ElasticSearchQuery.builder()
             .initialSearch(true)
@@ -44,7 +54,6 @@ public class ElasticSearchRepository {
 
         log.info("Processing the Case Migration search for case type {}.", caseType);
         String authToken = authTokenGenerator.generate();
-
         SearchResult searchResult = coreCaseDataApi.searchCases(userToken,
                                                                 authToken,
                                                                 caseType, elasticSearchQuery.getQuery()

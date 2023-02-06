@@ -49,9 +49,6 @@ public class ElasticSearchQuery {
                 ]
             }
           },
-          "_source": [
-            "reference"
-          ],
           "size": %s,
           "sort": [
             {

@@ -76,12 +76,16 @@ public class CaseMigrationProcessor {
                     .forEach(submitMigration(userToken, caseType, executorService));
                 String searchAfterValue = searchResultCases.get(searchResultCases.size() - 1).getId().toString();
 
+                log.info("Data migration of cases started for searchAfterValue : {}",searchAfterValue);
+
                 boolean keepSearching;
                 do {
                     SearchResult subsequentSearchResult = elasticSearchRepository.fetchNextPage(userToken,
                                                                         caseType,
                                                                         searchAfterValue,
                                                                         defaultQuerySize);
+
+                    log.info("Data migration of cases started for searchAfterValue : {}",searchAfterValue);
 
                     keepSearching = false;
                     if (subsequentSearchResult != null) {
@@ -215,6 +219,7 @@ public class CaseMigrationProcessor {
             Long id = caseDetails.getId();
             log.info("Updating case {} at state {}", id);
             try {
+                log.debug("Case data: {}", caseDetails.getData());
                 Map<String, Object> caseData = caseDetails.getData();
                 if (setCaseToHandedOffToLegacySite(caseData)) {
                     caseData.put("caseHandedOffToLegacySite","Yes");
@@ -233,7 +238,6 @@ public class CaseMigrationProcessor {
                 migratedCases.add(id);
             } catch (Exception e) {
                 log.error("Case {} update failed due to : {}", id, e.getMessage());
-                e.printStackTrace();
                 failedCases.add(id);
             }
         } else {
