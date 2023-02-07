@@ -219,7 +219,7 @@ public class CaseMigrationProcessor {
             Long id = caseDetails.getId();
             log.info("Updating case {} at state {}", id);
             try {
-                log.debug("Case data: {}", caseDetails.getData());
+                log.debug("Case data before: {}", caseDetails.getData());
                 Map<String, Object> caseData = caseDetails.getData();
                 if (setCaseToHandedOffToLegacySite(caseData)) {
                     caseData.put("caseHandedOffToLegacySite","Yes");
@@ -234,6 +234,7 @@ public class CaseMigrationProcessor {
                     caseType,
                     caseDetails
                 );
+                log.debug("Case data after: {}", caseDetails.getData());
                 log.info("Case {} successfully updated", id);
                 migratedCases.add(id);
             } catch (Exception e) {

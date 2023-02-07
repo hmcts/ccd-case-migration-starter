@@ -39,13 +39,6 @@ public class ElasticSearchRepositoryTest {
                  }
                },
                 "should": [
-                     {"match": { "state": "PAAppCreated" }},
-                     {"match": { "state": "SolAppCreatedSolicitorDtls" }},
-                     {"match": { "state": "SolAppCreatedDeceasedDtls" }},
-                     {"match": { "state": "SolAppUpdated" }},
-                     {"match": { "state": "SolProbateCreated" }},
-                     {"match": { "state": "SolIntestacyCreated" }},
-                     {"match": { "state": "SolAdmonCreated" }},
                      {"match": { "state": "CaseCreated" }},
                      {"match": { "state": "CasePaymentFailed" }},
                      {"match": { "state": "Stopped" }},
@@ -92,13 +85,6 @@ public class ElasticSearchRepositoryTest {
                  }
                },
                 "should": [
-                     {"match": { "state": "PAAppCreated" }},
-                     {"match": { "state": "SolAppCreatedSolicitorDtls" }},
-                     {"match": { "state": "SolAppCreatedDeceasedDtls" }},
-                     {"match": { "state": "SolAppUpdated" }},
-                     {"match": { "state": "SolProbateCreated" }},
-                     {"match": { "state": "SolIntestacyCreated" }},
-                     {"match": { "state": "SolAdmonCreated" }},
                      {"match": { "state": "CaseCreated" }},
                      {"match": { "state": "CasePaymentFailed" }},
                      {"match": { "state": "Stopped" }},
