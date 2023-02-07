@@ -19,21 +19,51 @@ public class ElasticSearchQueryTest {
             .size(QUERY_SIZE)
             .build();
         String query = elasticSearchQuery.getQuery();
-        assertEquals("{\n"
-                         + "  \"query\": {\n"
-                         + "    \"match_all\": {}\n"
-                         + "  },\n"
-                         + "  \"_source\": [\n"
-                         + "    \"reference\"\n"
-                         + "  ],\n"
-                         + "  \"size\": 100,\n"
-                         + "  \"sort\": [\n"
-                         + "    {\n"
-                         + "      \"reference.keyword\": \"asc\"\n"
-                         + "    }\n"
-                         + "  ]\n"
-                         + "\n"
-                         + "}", query);
+        assertEquals("""
+        {
+          "query": {
+            "bool": {
+               "must_not": {
+                 "exists": {
+                   "field": "data.caseHandedOffToLegacySite"
+                 }
+               },
+                "should": [
+                     {"match": { "state": "CaseCreated" }},
+                     {"match": { "state": "CasePaymentFailed" }},
+                     {"match": { "state": "Stopped" }},
+                     {"match": { "state": "Dormant" }},
+                     {"match": { "state": "CasePrinted" }},
+                     {"match": { "state": "BOReadyForExamination" }},
+                     {"match": { "state": "BOExamining" }},
+                     {"match": { "state": "BOCaseStopped" }},
+                     {"match": { "state": "BOCaveatPermenant" }},
+                     {"match": { "state": "BORegistrarEscalation" }},
+                     {"match": { "state": "BOReadyToIssue" }},
+                     {"match": { "state": "BOCaseQA" }},
+                     {"match": { "state": "BOCaseMatchingIssueGrant" }},
+                     {"match": { "state": "BOCaseMatchingExamining" }},
+                     {"match": { "state": "BOCaseClosed" }},
+                     {"match": { "state": "applyforGrantPaperApplication" }},
+                     {"match": { "state": "BOCaseImported" }},
+                     {"match": { "state": "BOExaminingReissue" }},
+                     {"match": { "state": "BOCaseMatchingReissue" }},
+                     {"match": { "state": "BOCaseStoppedReissue" }},
+                     {"match": { "state": "BOCaseStoppedAwaitRedec" }},
+                     {"match": { "state": "BOCaseMatchingIssueGrant" }},
+                     {"match": { "state": "BORedecNotificationSent" }},
+                     {"match": { "state": "BOSotGenerated" }}
+                ]
+            }
+          },
+          "size": 100,
+          "sort": [
+            {
+              "reference.keyword": "asc"
+            }
+          ]
+
+            }""", query);
     }
 
     @Test
@@ -44,20 +74,50 @@ public class ElasticSearchQueryTest {
             .searchAfterValue("1677777777")
             .build();
         String query = elasticSearchQuery.getQuery();
-        assertEquals("{\n"
-                         + "  \"query\": {\n"
-                         + "    \"match_all\": {}\n"
-                         + "  },\n"
-                         + "  \"_source\": [\n"
-                         + "    \"reference\"\n"
-                         + "  ],\n"
-                         + "  \"size\": 100,\n"
-                         + "  \"sort\": [\n"
-                         + "    {\n"
-                         + "      \"reference.keyword\": \"asc\"\n"
-                         + "    }\n"
-                         + "  ]\n"
-                         + ",\"search_after\": [1677777777]\n"
-                         + "}", query);
+        assertEquals("""
+        {
+          "query": {
+            "bool": {
+               "must_not": {
+                 "exists": {
+                   "field": "data.caseHandedOffToLegacySite"
+                 }
+               },
+                "should": [
+                     {"match": { "state": "CaseCreated" }},
+                     {"match": { "state": "CasePaymentFailed" }},
+                     {"match": { "state": "Stopped" }},
+                     {"match": { "state": "Dormant" }},
+                     {"match": { "state": "CasePrinted" }},
+                     {"match": { "state": "BOReadyForExamination" }},
+                     {"match": { "state": "BOExamining" }},
+                     {"match": { "state": "BOCaseStopped" }},
+                     {"match": { "state": "BOCaveatPermenant" }},
+                     {"match": { "state": "BORegistrarEscalation" }},
+                     {"match": { "state": "BOReadyToIssue" }},
+                     {"match": { "state": "BOCaseQA" }},
+                     {"match": { "state": "BOCaseMatchingIssueGrant" }},
+                     {"match": { "state": "BOCaseMatchingExamining" }},
+                     {"match": { "state": "BOCaseClosed" }},
+                     {"match": { "state": "applyforGrantPaperApplication" }},
+                     {"match": { "state": "BOCaseImported" }},
+                     {"match": { "state": "BOExaminingReissue" }},
+                     {"match": { "state": "BOCaseMatchingReissue" }},
+                     {"match": { "state": "BOCaseStoppedReissue" }},
+                     {"match": { "state": "BOCaseStoppedAwaitRedec" }},
+                     {"match": { "state": "BOCaseMatchingIssueGrant" }},
+                     {"match": { "state": "BORedecNotificationSent" }},
+                     {"match": { "state": "BOSotGenerated" }}
+                ]
+            }
+          },
+          "size": 100,
+          "sort": [
+            {
+              "reference.keyword": "asc"
+            }
+          ]
+        ,\"search_after\": [1677777777]
+            }""", query);
     }
 }

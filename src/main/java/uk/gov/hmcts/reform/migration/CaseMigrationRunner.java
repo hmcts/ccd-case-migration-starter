@@ -19,6 +19,9 @@ public class CaseMigrationRunner implements CommandLineRunner {
     @Value("${migration.caseType}")
     private String caseType;
 
+    @Value("${default.thread.limit}")
+    private int defaultThreadLimit;
+
     public static void main(String[] args) {
         SpringApplication.run(CaseMigrationRunner.class, args);
     }
@@ -26,7 +29,14 @@ public class CaseMigrationRunner implements CommandLineRunner {
     @Override
     public void run(String... args) {
         try {
-            caseMigrationProcessor.migrateCases(caseType);
+            if (defaultThreadLimit <= 1) {
+                log.info("CaseMigrationRunner.defaultThreadLimit= {} ", defaultThreadLimit);
+                caseMigrationProcessor.migrateCases(caseType);
+            } else {
+                log.info("CaseMigrationRunner.defaultThreadLimit= {} ", defaultThreadLimit);
+                caseMigrationProcessor.process(caseType);
+            }
+
         } catch (Exception e) {
             log.error("Migration failed with the following reason: {}", e.getMessage(), e);
         }

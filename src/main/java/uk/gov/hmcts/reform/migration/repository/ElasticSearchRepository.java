@@ -12,6 +12,7 @@ import uk.gov.hmcts.reform.migration.query.ElasticSearchQuery;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 @Slf4j
@@ -36,6 +37,15 @@ public class ElasticSearchRepository {
         this.caseProcessLimit = caseProcessLimit;
     }
 
+    public Optional<CaseDetails> findCaseByCaseId(String authorisation, String caseId) {
+        try {
+            return Optional.ofNullable(coreCaseDataApi.getCase(authorisation, authTokenGenerator.generate(), caseId));
+        } catch (Exception ex) {
+            log.error("Case {} not found due to: {}", caseId, ex.getMessage());
+        }
+        return Optional.empty();
+    }
+
     public List<CaseDetails> findCaseByCaseType(String userToken, String caseType) {
         ElasticSearchQuery elasticSearchQuery = ElasticSearchQuery.builder()
             .initialSearch(true)
@@ -44,7 +54,6 @@ public class ElasticSearchRepository {
 
         log.info("Processing the Case Migration search for case type {}.", caseType);
         String authToken = authTokenGenerator.generate();
-
         SearchResult searchResult = coreCaseDataApi.searchCases(userToken,
                                                                 authToken,
                                                                 caseType, elasticSearchQuery.getQuery()
@@ -83,5 +92,40 @@ public class ElasticSearchRepository {
         }
         log.info("The Case Migration has processed caseDetails {}.", caseDetails.size());
         return caseDetails;
+    }
+
+
+    public SearchResult fetchFirstPage(String userToken, String caseType, int querySize) {
+        ElasticSearchQuery elasticSearchQuery = ElasticSearchQuery.builder()
+            .initialSearch(true)
+            .size(querySize)
+            .build();
+        log.info("Fetching the case details from elastic search for case type {}.", caseType);
+        String authToken = authTokenGenerator.generate();
+        return coreCaseDataApi.searchCases(userToken,
+                                           authToken,
+                                           caseType, elasticSearchQuery.getQuery()
+        );
+    }
+
+    public SearchResult fetchNextPage(String userToken,
+                                      String caseType,
+                                      String searchAfterValue,
+                                      int querySize) {
+
+        String authToken = authTokenGenerator.generate();
+
+        ElasticSearchQuery subsequentElasticSearchQuery = ElasticSearchQuery.builder()
+            .initialSearch(false)
+            .size(querySize)
+            .searchAfterValue(searchAfterValue)
+            .build();
+
+        SearchResult subsequentSearchResult =
+            coreCaseDataApi.searchCases(userToken,
+                                        authToken,
+                                        caseType, subsequentElasticSearchQuery.getQuery()
+            );
+        return subsequentSearchResult;
     }
 }
