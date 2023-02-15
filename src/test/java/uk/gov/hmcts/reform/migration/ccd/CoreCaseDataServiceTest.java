@@ -95,9 +95,15 @@ public class CoreCaseDataServiceTest {
 
         when(authTokenGenerator.generate()).thenReturn(AUTH_TOKEN);
 
+        CaseDetails caseDetails = CaseDetails.builder()
+            .id(123456789L)
+            .data(data)
+            .build();
+
         StartEventResponse startEventResponse = StartEventResponse.builder()
             .eventId(EVENT_ID)
             .token(EVENT_TOKEN)
+            .caseDetails(caseDetails)
             .build();
 
         when(coreCaseDataApi.startEventForCaseWorker(AUTH_TOKEN, AUTH_TOKEN, "30",
@@ -116,10 +122,6 @@ public class CoreCaseDataServiceTest {
             .ignoreWarning(false)
             .build();
 
-        CaseDetails caseDetails = CaseDetails.builder()
-            .id(123456789L)
-            .data(data)
-            .build();
         when(coreCaseDataApi.submitEventForCaseWorker(AUTH_TOKEN, AUTH_TOKEN, USER_ID, null,
                                                       CASE_TYPE, CASE_ID, true, caseDataContent
         )).thenReturn(caseDetails);

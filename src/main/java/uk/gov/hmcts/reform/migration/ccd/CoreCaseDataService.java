@@ -39,6 +39,8 @@ public class CoreCaseDataService {
             caseId,
             eventId);
 
+        CaseDetails updatedCaseDetails = startEventResponse.getCaseDetails();
+
         CaseDataContent caseDataContent = CaseDataContent.builder()
             .eventToken(startEventResponse.getToken())
             .event(
@@ -47,14 +49,14 @@ public class CoreCaseDataService {
                     .summary(eventSummary)
                     .description(eventDescription)
                     .build()
-            ).data(caseDetails.getData())
+            ).data(updatedCaseDetails.getData())
             .build();
 
         return coreCaseDataApi.submitEventForCaseWorker(
             AuthUtil.getBearerToken(authorisation),
             authTokenGenerator.generate(),
             userDetails.getId(),
-            caseDetails.getJurisdiction(),
+            updatedCaseDetails.getJurisdiction(),
             caseType,
             caseId,
             true,
