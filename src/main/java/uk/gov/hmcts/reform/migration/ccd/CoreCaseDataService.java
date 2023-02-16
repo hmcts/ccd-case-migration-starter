@@ -31,17 +31,17 @@ public class CoreCaseDataService {
                               String eventSummary,
                               String eventDescription,
                               String caseType,
-                              CaseDetails caseDetails) {
-        String caseId = String.valueOf(caseDetails.getId());
+                              Long caseId,
+                              String jurisdiction) {
         UserDetails userDetails = idamClient.getUserDetails(AuthUtil.getBearerToken(authorisation));
 
         StartEventResponse startEventResponse = coreCaseDataApi.startEventForCaseWorker(
             AuthUtil.getBearerToken(authorisation),
             authTokenGenerator.generate(),
             userDetails.getId(),
-            caseDetails.getJurisdiction(),
+            jurisdiction,
             caseType,
-            caseId,
+            String.valueOf(caseId),
             eventId);
 
         CaseDetails updatedCaseDetails = startEventResponse.getCaseDetails();
@@ -63,7 +63,7 @@ public class CoreCaseDataService {
             userDetails.getId(),
             updatedCaseDetails.getJurisdiction(),
             caseType,
-            caseId,
+            String.valueOf(caseId),
             true,
             caseDataContent);
     }

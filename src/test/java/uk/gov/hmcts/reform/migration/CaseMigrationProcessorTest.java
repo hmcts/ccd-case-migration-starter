@@ -66,7 +66,7 @@ public class CaseMigrationProcessorTest {
         List<CaseDetails> listOfCaseDetails = elasticSearchRepository.findCaseByCaseType(USER_TOKEN, CASE_TYPE);
         assertNotNull(listOfCaseDetails);
         when(coreCaseDataService.update(USER_TOKEN, EVENT_ID, EVENT_SUMMARY,
-                                        EVENT_DESCRIPTION, CASE_TYPE, details))
+                                        EVENT_DESCRIPTION, CASE_TYPE, details.getId(), details.getJurisdiction()))
             .thenReturn(details);
         caseMigrationProcessor.migrateCases(CASE_TYPE);
         verify(coreCaseDataService, times(1))
@@ -75,7 +75,8 @@ public class CaseMigrationProcessorTest {
                     EVENT_SUMMARY,
                     EVENT_DESCRIPTION,
                     CASE_TYPE,
-                    details);
+                    details.getId(),
+                    details.getJurisdiction());
     }
 
     @Test
@@ -92,7 +93,7 @@ public class CaseMigrationProcessorTest {
         List<CaseDetails> listOfCaseDetails = elasticSearchRepository.findCaseByCaseType(USER_TOKEN, CASE_TYPE);
         assertNotNull(listOfCaseDetails);
         when(coreCaseDataService.update(USER_TOKEN, EVENT_ID, EVENT_SUMMARY,
-                                        EVENT_DESCRIPTION, CASE_TYPE, details))
+                                        EVENT_DESCRIPTION, CASE_TYPE, details.getId(), details.getJurisdiction()))
             .thenReturn(details);
         caseMigrationProcessor.migrateCases(CASE_TYPE);
         verify(coreCaseDataService, times(1))
@@ -101,7 +102,8 @@ public class CaseMigrationProcessorTest {
                     EVENT_SUMMARY,
                     EVENT_DESCRIPTION,
                     CASE_TYPE,
-                    details);
+                    details.getId(),
+                    details.getJurisdiction());
     }
 
     @Test

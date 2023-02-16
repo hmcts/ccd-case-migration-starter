@@ -69,7 +69,8 @@ public class CoreCaseDataServiceTest {
         setupMocks(userDetails, caseDetails3.getData());
 
         //when
-        CaseDetails update = underTest.update(AUTH_TOKEN, EVENT_ID, EVENT_SUMMARY, EVENT_DESC, CASE_TYPE, caseDetails3);
+        CaseDetails update = underTest.update(AUTH_TOKEN, EVENT_ID, EVENT_SUMMARY, EVENT_DESC, CASE_TYPE,
+                                              caseDetails3.getId(), caseDetails3.getJurisdiction());
         //then
         assertThat(update.getId(), is(Long.parseLong(CASE_ID)));
         assertThat(update.getData().get("solicitorEmail"), is("Padmaja.Ramisetti@hmcts.net"));
