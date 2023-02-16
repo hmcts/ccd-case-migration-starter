@@ -63,7 +63,7 @@ public class CoreCaseDataService {
             userDetails.getId(),
             updatedCaseDetails.getJurisdiction(),
             caseType,
-            String.valueOf(caseId),
+            String.valueOf(updatedCaseDetails.getId()),
             true,
             caseDataContent);
     }
