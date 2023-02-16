@@ -11,6 +11,9 @@ import uk.gov.hmcts.reform.ccd.client.model.StartEventResponse;
 import uk.gov.hmcts.reform.idam.client.IdamClient;
 import uk.gov.hmcts.reform.idam.client.models.UserDetails;
 import uk.gov.hmcts.reform.migration.auth.AuthUtil;
+import uk.gov.hmcts.reform.migration.service.DataMigrationService;
+
+import java.util.Map;
 
 @Service
 public class CoreCaseDataService {
@@ -21,6 +24,8 @@ public class CoreCaseDataService {
     private AuthTokenGenerator authTokenGenerator;
     @Autowired
     private CoreCaseDataApi coreCaseDataApi;
+    @Autowired
+    private DataMigrationService<Map<String, Object>> dataMigrationService;
 
     public CaseDetails update(String authorisation, String eventId,
                               String eventSummary,
@@ -49,7 +54,7 @@ public class CoreCaseDataService {
                     .summary(eventSummary)
                     .description(eventDescription)
                     .build()
-            ).data(updatedCaseDetails.getData())
+            ).data(dataMigrationService.migrate(updatedCaseDetails.getData()))
             .build();
 
         return coreCaseDataApi.submitEventForCaseWorker(
