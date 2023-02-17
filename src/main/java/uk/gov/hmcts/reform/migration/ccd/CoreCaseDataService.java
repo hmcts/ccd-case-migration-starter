@@ -11,6 +11,9 @@ import uk.gov.hmcts.reform.ccd.client.model.StartEventResponse;
 import uk.gov.hmcts.reform.idam.client.IdamClient;
 import uk.gov.hmcts.reform.idam.client.models.UserDetails;
 import uk.gov.hmcts.reform.migration.auth.AuthUtil;
+import uk.gov.hmcts.reform.migration.service.DataMigrationService;
+
+import java.util.Map;
 
 @Service
 public class CoreCaseDataService {
@@ -21,23 +24,27 @@ public class CoreCaseDataService {
     private AuthTokenGenerator authTokenGenerator;
     @Autowired
     private CoreCaseDataApi coreCaseDataApi;
+    @Autowired
+    private DataMigrationService<Map<String, Object>> dataMigrationService;
 
     public CaseDetails update(String authorisation, String eventId,
                               String eventSummary,
                               String eventDescription,
                               String caseType,
-                              CaseDetails caseDetails) {
-        String caseId = String.valueOf(caseDetails.getId());
+                              Long caseId,
+                              String jurisdiction) {
         UserDetails userDetails = idamClient.getUserDetails(AuthUtil.getBearerToken(authorisation));
 
         StartEventResponse startEventResponse = coreCaseDataApi.startEventForCaseWorker(
             AuthUtil.getBearerToken(authorisation),
             authTokenGenerator.generate(),
             userDetails.getId(),
-            caseDetails.getJurisdiction(),
+            jurisdiction,
             caseType,
-            caseId,
+            String.valueOf(caseId),
             eventId);
+
+        CaseDetails updatedCaseDetails = startEventResponse.getCaseDetails();
 
         CaseDataContent caseDataContent = CaseDataContent.builder()
             .eventToken(startEventResponse.getToken())
@@ -47,16 +54,16 @@ public class CoreCaseDataService {
                     .summary(eventSummary)
                     .description(eventDescription)
                     .build()
-            ).data(caseDetails.getData())
+            ).data(dataMigrationService.migrate(updatedCaseDetails.getData()))
             .build();
 
         return coreCaseDataApi.submitEventForCaseWorker(
             AuthUtil.getBearerToken(authorisation),
             authTokenGenerator.generate(),
             userDetails.getId(),
-            caseDetails.getJurisdiction(),
+            updatedCaseDetails.getJurisdiction(),
             caseType,
-            caseId,
+            String.valueOf(updatedCaseDetails.getId()),
             true,
             caseDataContent);
     }

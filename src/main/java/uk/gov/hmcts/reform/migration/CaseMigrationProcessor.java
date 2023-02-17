@@ -108,7 +108,8 @@ public class CaseMigrationProcessor {
                     EVENT_SUMMARY,
                     EVENT_DESCRIPTION,
                     caseType,
-                    caseDetails
+                    caseDetails.getId(),
+                    caseDetails.getJurisdiction()
                 );
                 log.info("Case {} successfully updated", id);
                 migratedCases.add(id);
