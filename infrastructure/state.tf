@@ -11,3 +11,9 @@ terraform {
     }
   }
 }
+
+variable "product" {}
+
+variable "common_tags" {}
+
+variable "env" {}
