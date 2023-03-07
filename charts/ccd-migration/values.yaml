@@ -8,8 +8,8 @@ job:
   keyVaults:
     ccd:
       secrets:
-        - name: AppInsightsInstrumentationKey
-          alias: azure.application-insights.instrumentation-key
+        - name: app-insights-connection-string
+          alias: app-insights-connection-string
   environment:
     IDAM_S2S_URL: http://rpe-service-auth-provider-{{ .Values.global.environment }}.service.core-compute-{{ .Values.global.environment }}.internal
     IDAM_USER: test-user
