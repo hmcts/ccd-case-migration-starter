@@ -7,9 +7,12 @@
 
   <!--Please add all the temporary suppression under the below section-->
   <suppress>
-    <notes>Temporary Suppression</notes>
-    <cve>CVE-2023-24998</cve>
+    <notes>Temporary Suppression
+        CVE-2022-45688 refer https://tools.hmcts.net/jira/browse/CCD-4373
+        CVE-2022-1471 refer https://tools.hmcts.net/jira/browse/CCD-4454
+    </notes>
     <cve>CVE-2022-45688</cve>
+    <cve>CVE-2022-1471</cve>
   </suppress>
   <!--End of temporary suppression section -->
 
