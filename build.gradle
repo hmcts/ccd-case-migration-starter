@@ -178,6 +178,7 @@ ext['snakeyaml.version'] = '1.33'
 ext['spring-security.version'] = '5.7.5'
 
 dependencies {
+  configurations.classpath.exclude group: 'xerces', module: 'xercesImpl'
   implementation("org.springframework.cloud:spring-cloud-starter-bootstrap")
   implementation group: 'org.springframework.boot', name: 'spring-boot-starter-actuator'
   implementation group: 'org.springframework.boot', name: 'spring-boot-starter-aop'
@@ -260,7 +261,6 @@ wrapper {
 }
 
 configurations.all {
-  exclude group: 'xerces', module: 'xercesImpl'
   exclude group: 'org.bouncycastle', module: 'bcprov-jdk15on'
   exclude group: 'org.springframework.boot', module: 'spring-boot-starter-security'
   exclude group: 'org.springframework.security', module: 'spring-security-rsa'
