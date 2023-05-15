@@ -184,7 +184,7 @@ dependencies {
   implementation group: 'org.springframework.boot', name: 'spring-boot-starter-json'
   implementation group: 'org.springframework', name: 'spring-context-support'
   implementation group: 'com.github.hmcts', name: 'idam-java-client', version: '1.5.5'
-  implementation group: 'com.github.hmcts', name: 'service-auth-provider-java-client', version: '3.0.0'
+  implementation group: 'com.github.hmcts', name: 'service-auth-provider-java-client', version: '3.1.4'
   implementation group: 'com.github.hmcts', name: 'core-case-data-store-client', version: '4.9.2'
 
   testImplementation group: 'org.springframework.boot', name: 'spring-boot-starter-test'
