@@ -169,13 +169,13 @@ ext {
   junitJupiterVersion = '5.7.1'
   junitVintageVersion = '5.7.1'
   powermockVersion = '2.0.9'
-  springSecurity   =  '5.7.5'
+  springSecurity   =  '5.7.8'
   springCloudVersion = '2021.0.7'
 }
 
 ext['jackson.version'] = '2.14.1'
 ext['snakeyaml.version'] = '1.33'
-ext['spring-security.version'] = '5.7.5'
+ext['spring-security.version'] = '5.7.8'
 
 dependencies {
   implementation("org.springframework.cloud:spring-cloud-starter-bootstrap")
