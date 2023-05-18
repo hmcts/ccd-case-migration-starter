@@ -167,7 +167,7 @@ ext {
   lombokVersion = "1.18.26"
   junit_version = "4.12"
   junitJupiterVersion = '5.7.1'
-  junitVintageVersion = '5.7.1'
+  junitVintageVersion = '5.9.3'
   powermockVersion = '2.0.9'
   springSecurity   =  '5.7.8'
   springCloudVersion = '2021.0.7'
