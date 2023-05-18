@@ -204,7 +204,7 @@ dependencies {
   testImplementation "org.junit.jupiter:junit-jupiter-api:${junitJupiterVersion}"
   testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:${junitJupiterVersion}"
   testRuntimeOnly "org.junit.vintage:junit-vintage-engine:${junitVintageVersion}"
-  testImplementation group:'org.mockito', name: 'mockito-junit-jupiter', version:'3.6.0'
+  testImplementation group:'org.mockito', name: 'mockito-junit-jupiter', version:'3.12.4'
   testImplementation group: 'org.powermock', name: 'powermock-api-mockito2', version: powermockVersion
   testImplementation group: 'org.powermock', name: 'powermock-module-junit4', version: powermockVersion
   testRuntimeOnly "org.junit.platform:junit-platform-commons:1.7.0"
