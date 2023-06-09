@@ -1,2 +1,3 @@
 rootProject.name = 'ccd-case-migration-starter'
 
+include 'modules:domain', 'modules:processor'
