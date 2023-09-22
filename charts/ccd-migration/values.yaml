@@ -5,15 +5,15 @@ job:
   ingressHost: ccd-migration-{{ .Values.global.environment }}.service.core-compute-{{ .Values.global.environment }}.internal
   aadIdentityName: ccd
 #  Uncomment once the vault containing the app insights key has been set up
-  keyVaults:
-    ccd:
-      secrets:
-        - name: app-insights-connection-string
-          alias: app-insights-connection-string
+#  keyVaults:
+#    ccd:
+#      secrets:
+#        - name: app-insights-connection-string
+#          alias: app-insights-connection-string
   environment:
     IDAM_S2S_URL: http://rpe-service-auth-provider-{{ .Values.global.environment }}.service.core-compute-{{ .Values.global.environment }}.internal
-    IDAM_USER: test-user
-    IDAM_PASS: test_pass
+#    IDAM_USER: test-user
+#    IDAM_PASS: test_pass
     MIGRATION_CASETYPE: case_type_1
     MIGRATION_QUERY_SIZE: 10000
 
