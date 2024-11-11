@@ -168,7 +168,7 @@ ext {
   junitJupiterVersion = '5.9.3'
   junitVintageVersion = '5.9.3'
   powermockVersion = '2.0.9'
-  springSecurity   =  '9.37.2'
+  springSecurity   =  '5.8.10'
   springCloudVersion = '2021.0.7'
 }
 
@@ -177,6 +177,9 @@ ext['snakeyaml.version'] = '2.0'
 ext['spring-security.version'] = '5.8.10'
 
 dependencies {
+  implementation group: 'com.nimbusds', name: 'nimbus-jose-jwt', version: '9.37.2' //Fix for CVE-2023-52428
+
+
   implementation("org.springframework.cloud:spring-cloud-starter-bootstrap")
   implementation group: 'org.springframework.boot', name: 'spring-boot-starter-actuator'
   implementation group: 'org.springframework.boot', name: 'spring-boot-starter-aop'
