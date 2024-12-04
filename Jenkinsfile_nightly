@@ -11,6 +11,9 @@ def type = "java"
 def product = "ccd"
 def component = "migration"
 
+// Prevent Docker hub rate limit errors by ensuring that testcontainers uses images from hmctspublic ACR
+env.TESTCONTAINERS_HUB_IMAGE_NAME_PREFIX = "hmctspublic.azurecr.io/imported/"
+
 withNightlyPipeline(type, product, component) {
   enableAksStagingDeployment()
   disableLegacyDeployment()

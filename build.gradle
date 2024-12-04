@@ -3,13 +3,13 @@ plugins {
   id 'checkstyle'
   id 'jacoco'
   id 'java'
-  id "io.freefair.lombok" version "6.6.3"
+  id "io.freefair.lombok" version "8.10.2"
   id 'io.spring.dependency-management' version '1.1.0'
   id 'org.springframework.boot' version '2.7.18'
   id 'com.github.kt3k.coveralls' version '2.12.2'
-  id 'com.github.ben-manes.versions' version '0.46.0'
-  id 'org.sonarqube' version '3.5.0.2730'
-  id 'uk.gov.hmcts.java' version '0.12.43'
+  id 'com.github.ben-manes.versions' version '0.51.0'
+  id 'org.sonarqube' version '5.1.0.4882'
+  id 'uk.gov.hmcts.java' version '0.12.63'
 }
 
 group = 'uk.gov.hmcts.reform'
@@ -17,7 +17,7 @@ version = '0.0.1'
 
 java {
   toolchain {
-    languageVersion = JavaLanguageVersion.of(17)
+    languageVersion = JavaLanguageVersion.of(21)
   }
 }
 
@@ -105,10 +105,9 @@ task integration(type: Test) {
 }
 
 task fortifyScan(type: JavaExec)  {
-  main = "uk.gov.hmcts.fortifyclient.FortifyClientMainApp"
+  mainClass = "uk.gov.hmcts.fortifyclient.FortifyClientMainApp"
   classpath += sourceSets.test.runtimeClasspath
   jvmArgs = ['--add-opens=java.base/java.lang.reflect=ALL-UNNAMED']
-  ignoreExitValue = true
 }
 
 task smoke(type: Test) {
@@ -128,7 +127,7 @@ jacocoTestReport {
   reports {
     xml.required = true
     csv.required = false
-    xml.destination file("${buildDir}/reports/jacoco/test/jacocoTestReport.xml")
+    xml.outputLocation = file("${buildDir}/reports/jacoco/test/jacocoTestReport.xml")
   }
 }
 
@@ -140,7 +139,7 @@ sonarqube {
     property "sonar.projectName", "ccd-case-migration-starter"
     property "sonar.projectKey", "ccd-case-migration-starter"
     property "sonar.exclusions", "**/exception/*.java,**/domain/*.java,**/common/*.java,**/migration/auth/AuthTokenGeneratorConfiguration.java,**/migration/CaseMigrationRunner.java,**/ccd/HttpMessageConverterConfiguration.java"
-    property "sonar.coverage.jacoco.xmlReportPaths", "${jacocoTestReport.reports.xml.destination.path}"
+    property "sonar.coverage.jacoco.xmlReportPaths", "${jacocoTestReport.reports.xml.outputLocation}"
   }
 }
 
@@ -171,7 +170,7 @@ repositories {
 ext {
   log4JVersion = "2.20.0"
   restAssuredVersion = '4.3.0!!'
-  lombokVersion = "1.18.28"
+  lombokVersion = "1.18.34"
   junit_version = "4.12"
   junitJupiterVersion = '5.9.3'
   junitVintageVersion = '5.9.3'
@@ -185,6 +184,8 @@ ext['snakeyaml.version'] = '2.0'
 ext['spring-security.version'] = '5.8.10'
 
 dependencies {
+  //implementation group: 'com.nimbusds', name: 'nimbus-jose-jwt', version: '9.37.2' //Fix for CVE-2023-52428
+
   implementation("org.springframework.cloud:spring-cloud-starter-bootstrap")
   implementation group: 'org.springframework.boot', name: 'spring-boot-starter-actuator'
 
@@ -255,7 +256,9 @@ dependencyManagement {
   }
 }
 
-mainClassName = 'uk.gov.hmcts.reform.migration.CaseMigrationRunner'
+application {
+  mainClass = 'uk.gov.hmcts.reform.migration.CaseMigrationRunner'
+}
 
 bootJar {
   archiveFileName = 'ccd-case-migration.jar'
@@ -294,7 +297,7 @@ test {
   }
 
   reports {
-    html.enabled = true
+    html.required = true
   }
 
   jvmArgs = [
@@ -307,4 +310,3 @@ test {
     '--add-opens', 'jdk.management/com.sun.management.internal=ALL-UNNAMED'
   ]
 }
-
