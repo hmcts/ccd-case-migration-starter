@@ -168,13 +168,13 @@ ext {
   junitJupiterVersion = '5.9.3'
   junitVintageVersion = '5.9.3'
   powermockVersion = '2.0.9'
-  springSecurity   =  '5.8.10'
+  springSecurity   =  '5.8.15'
   springCloudVersion = '2021.0.7'
 }
 
 ext['jackson.version'] = '2.15.3'
 ext['snakeyaml.version'] = '2.0'
-ext['spring-security.version'] = '5.8.10'
+ext['spring-security.version'] = '5.8.15'
 
 dependencies {
   //implementation group: 'com.nimbusds', name: 'nimbus-jose-jwt', version: '9.37.2' //Fix for CVE-2023-52428
