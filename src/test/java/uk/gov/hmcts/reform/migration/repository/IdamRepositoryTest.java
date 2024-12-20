@@ -32,9 +32,9 @@ public class IdamRepositoryTest {
 
     @Test
     public void shouldGenerateUserToken() {
-        when(idamClient.authenticateUser(anyString(), anyString())).thenReturn("Test_Auth");
+        when(idamClient.getAccessToken(anyString(), anyString())).thenReturn("Test_Auth");
         String authToken = idamRepository.generateUserToken();
-        verify(idamClient, times(1)).authenticateUser(IDAM_USER_NAME, IDAM_PASS);
+        verify(idamClient, times(1)).getAccessToken(IDAM_USER_NAME, IDAM_PASS);
         assertNotNull(authToken);
     }
 }

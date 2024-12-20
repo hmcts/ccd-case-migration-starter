@@ -16,6 +16,7 @@ import uk.gov.hmcts.reform.migration.service.DataMigrationService;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.Assert.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -41,7 +42,7 @@ public class CaseMigrationProcessorTest {
     private CoreCaseDataService coreCaseDataService;
 
     @Mock
-    private DataMigrationService dataMigrationService;
+    private DataMigrationService<Map<String, Object>> dataMigrationService;
 
     @Mock
     private ElasticSearchRepository elasticSearchRepository;
