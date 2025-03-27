@@ -1,13 +1,12 @@
 package uk.gov.hmcts.reform.migration.query;
 
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.junit.jupiter.MockitoExtension;
 
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.junit.MockitoJUnitRunner;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import static junit.framework.TestCase.assertEquals;
-
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class ElasticSearchQueryTest {
 
     private static final int QUERY_SIZE = 100;

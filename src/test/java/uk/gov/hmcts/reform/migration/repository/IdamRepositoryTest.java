@@ -1,20 +1,19 @@
 package uk.gov.hmcts.reform.migration.repository;
 
-
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.hmcts.reform.idam.client.IdamClient;
 
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class IdamRepositoryTest {
 
     private static final String IDAM_USER_NAME = "User123";
@@ -25,16 +24,16 @@ public class IdamRepositoryTest {
     @Mock
     private IdamClient idamClient;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         idamRepository = new IdamRepository(IDAM_USER_NAME, IDAM_PASS, idamClient);
     }
 
     @Test
     public void shouldGenerateUserToken() {
-        when(idamClient.authenticateUser(anyString(), anyString())).thenReturn("Test_Auth");
+        when(idamClient.getAccessToken(anyString(), anyString())).thenReturn("Test_Auth");
         String authToken = idamRepository.generateUserToken();
-        verify(idamClient, times(1)).authenticateUser(IDAM_USER_NAME, IDAM_PASS);
+        verify(idamClient, times(1)).getAccessToken(IDAM_USER_NAME, IDAM_PASS);
         assertNotNull(authToken);
     }
 }
