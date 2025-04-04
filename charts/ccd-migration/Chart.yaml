@@ -8,5 +8,5 @@ maintainers:
   - name: HMCTS ccd team
 dependencies:
   - name: job
-    version: 2.1.1
-    repository: 'https://hmctspublic.azurecr.io/helm/v1/repo/'
+    version: 2.2.0
+    repository: 'oci://hmctspublic.azurecr.io/helm'
