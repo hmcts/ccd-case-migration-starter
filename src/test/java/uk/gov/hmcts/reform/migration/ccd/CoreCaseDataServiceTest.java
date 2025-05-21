@@ -1,11 +1,11 @@
 package uk.gov.hmcts.reform.migration.ccd;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.hmcts.reform.authorisation.generators.AuthTokenGenerator;
 import uk.gov.hmcts.reform.ccd.client.CoreCaseDataApi;
 import uk.gov.hmcts.reform.ccd.client.model.CaseDataContent;
@@ -13,17 +13,17 @@ import uk.gov.hmcts.reform.ccd.client.model.CaseDetails;
 import uk.gov.hmcts.reform.ccd.client.model.Event;
 import uk.gov.hmcts.reform.ccd.client.model.StartEventResponse;
 import uk.gov.hmcts.reform.idam.client.IdamClient;
-import uk.gov.hmcts.reform.idam.client.models.UserDetails;
+import uk.gov.hmcts.reform.idam.client.models.UserInfo;
 import uk.gov.hmcts.reform.migration.service.DataMigrationService;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
 
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.Mockito.when;
 
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class CoreCaseDataServiceTest {
 
     private static final String EVENT_ID = "migrateCase";
@@ -51,22 +51,21 @@ public class CoreCaseDataServiceTest {
     private DataMigrationService<Map<String, Object>> dataMigrationService;
 
 
-    @Before
+    @BeforeEach
     public void setUp() {
     }
 
     @Test
     public void shouldUpdateTheCase() {
         // given
-        UserDetails userDetails = UserDetails.builder()
-            .id("30")
-            .email("test@test.com")
-            .forename("Test")
-            .surname("Surname")
+        UserInfo userInfo = UserInfo.builder()
+            .uid("30")
+            .givenName("Test")
+            .familyName("Surname")
             .build();
 
         CaseDetails caseDetails3 = createCaseDetails(CASE_ID, "case-3");
-        setupMocks(userDetails, caseDetails3.getData());
+        setupMocks(userInfo, caseDetails3.getData());
 
         //when
         CaseDetails update = underTest.update(AUTH_TOKEN, EVENT_ID, EVENT_SUMMARY, EVENT_DESC, CASE_TYPE,
@@ -95,8 +94,8 @@ public class CoreCaseDataServiceTest {
             .build();
     }
 
-    private void setupMocks(UserDetails userDetails, Map<String, Object> data) {
-        when(idamClient.getUserDetails(AUTH_TOKEN)).thenReturn(userDetails);
+    private void setupMocks(UserInfo userInfo, Map<String, Object> data) {
+        when(idamClient.getUserInfo(AUTH_TOKEN)).thenReturn(userInfo);
 
         when(authTokenGenerator.generate()).thenReturn(AUTH_TOKEN);
 
