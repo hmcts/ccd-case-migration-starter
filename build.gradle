@@ -158,7 +158,7 @@ dependencyCheck {
 repositories {
   mavenLocal()
   mavenCentral()
-  maven { 
+  maven {
     name = "AzureArtifacts"
     url = uri("https://pkgs.dev.azure.com/hmcts/Artifacts/_packaging/hmcts-lib/maven/v1")
   }
@@ -194,7 +194,7 @@ dependencies {
   implementation group: 'org.apache.logging.log4j', name: 'log4j-api', version: log4JVersion          // spring-cloud-starter-bootstrap
   implementation group: 'org.apache.logging.log4j', name: 'log4j-to-slf4j', version: log4JVersion     // spring-cloud-starter-bootstrap
 
-  testImplementation group: 'org.mockito', name: 'mockito-junit-jupiter', version:'5.18.0'            // spring-boot-starter-test
+  testImplementation group: 'org.mockito', name: 'mockito-junit-jupiter', version:'5.15.2'            // spring-boot-starter-test
 
   // end::CVE Vulnerability dependency overrides                                                      // MAIN PARENT DEPENDEDNCY
 
