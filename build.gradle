@@ -189,12 +189,9 @@ ext {
 dependencies {
 
   // start::CVE Vulnerability dependency overrides                                                    // MAIN PARENT DEPENDEDNCY
-  implementation group: 'commons-fileupload', name: 'commons-fileupload', version: '1.6.0'              // idam-java-client
-  implementation group: 'commons-io', name: 'commons-io', version: '2.19.0'                           // idam-java-client
-  implementation group: 'org.apache.logging.log4j', name: 'log4j-api', version: log4JVersion          // spring-cloud-starter-bootstrap
-  implementation group: 'org.apache.logging.log4j', name: 'log4j-to-slf4j', version: log4JVersion     // spring-cloud-starter-bootstrap
 
-  testImplementation group: 'org.mockito', name: 'mockito-junit-jupiter', version:'5.15.2'            // spring-boot-starter-test
+  // put CVE vulnerability (sub)dependency overrides here e.g.
+  // implementation group: 'com.example', name: 'example-lib', version: '1.2.3'
 
   // end::CVE Vulnerability dependency overrides                                                      // MAIN PARENT DEPENDEDNCY
 
@@ -214,7 +211,7 @@ dependencies {
   implementation group: 'org.springdoc', name: 'springdoc-openapi-starter-webmvc-ui', version: '2.8.9'
 
   // HMCTS
-  implementation group: 'com.github.hmcts', name: 'ccd-client', version: '5.1.1'
+  implementation group: 'com.github.hmcts', name: 'core-case-data-store-client', version: '5.1.1'
   implementation group: 'com.github.hmcts', name: 'idam-java-client', version: '3.0.4'
   implementation group: 'com.github.hmcts', name: 'service-auth-provider-java-client', version: '5.3.3'
   implementation group: 'com.github.hmcts.java-logging', name: 'logging', version: '6.1.9'
