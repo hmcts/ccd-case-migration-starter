@@ -4,7 +4,7 @@ plugins {
   id 'jacoco'
   id 'java'
   id 'com.github.ben-manes.versions' version '0.51.0' // 52 is bugged
-  id 'com.github.kt3k.coveralls' version '2.12.2'
+  // id 'com.github.kt3k.coveralls' version '2.12.2'
   id 'io.freefair.lombok' version '8.14.2'
   id 'io.spring.dependency-management' version '1.1.7'
   id 'org.owasp.dependencycheck' version '12.1.3'
@@ -134,22 +134,8 @@ sonarqube {
     property "sonar.projectKey", "ccd-case-migration-starter"
     property "sonar.exclusions", "**/exception/*.java,**/domain/*.java,**/common/*.java,**/migration/auth/AuthTokenGeneratorConfiguration.java,**/migration/CaseMigrationRunner.java,**/ccd/HttpMessageConverterConfiguration.java"
     property "sonar.coverage.jacoco.xmlReportPaths", "${project.buildDir}/reports/jacoco/test/jacocoTestReport.xml"
-    property "sonar.scanner.skipJreProvisioning", "true"
-  }
-}
-
-
-// Configure JVM arguments for SonarQube to handle SSL truststore issues
-tasks.named('sonarqube') {
-  doFirst {
-    jvmArgs = [
-      '-Dcom.sun.net.ssl.checkRevocation=false',
-      '-Dtrust_all_cert=true',
-      '--add-opens', 'java.base/java.lang=ALL-UNNAMED',
-      '--add-opens', 'java.base/java.nio=ALL-UNNAMED',
-      '--add-opens', 'java.base/sun.nio.ch=ALL-UNNAMED',
-      '--add-opens', 'java.management/sun.management=ALL-UNNAMED'
-    ]
+    property "sonar.scanner.skipJreProvisioning", true
+    property "sonar.scanner.skipSystemTruststore", true
   }
 }
 
