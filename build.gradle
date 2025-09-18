@@ -134,6 +134,7 @@ sonarqube {
     property "sonar.projectKey", "ccd-case-migration-starter"
     property "sonar.exclusions", "**/exception/*.java,**/domain/*.java,**/common/*.java,**/migration/auth/AuthTokenGeneratorConfiguration.java,**/migration/CaseMigrationRunner.java,**/ccd/HttpMessageConverterConfiguration.java"
     property "sonar.coverage.jacoco.xmlReportPaths", "${project.buildDir}/reports/jacoco/test/jacocoTestReport.xml"
+    property "sonar.scanner.skipJreProvisioning", "true"
   }
 }
 
