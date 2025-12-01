@@ -4,7 +4,6 @@ plugins {
   id 'jacoco'
   id 'java'
   id 'com.github.ben-manes.versions' version '0.51.0' // 52 is bugged
-  id 'com.github.kt3k.coveralls' version '2.12.2'
   id 'io.freefair.lombok' version '8.14.3'
   id 'io.spring.dependency-management' version '1.1.7'
   id 'org.owasp.dependencycheck' version '12.1.3'
@@ -132,6 +131,7 @@ sonarqube {
   properties {
     property "sonar.projectName", "ccd-case-migration-starter"
     property "sonar.projectKey", "ccd-case-migration-starter"
+    property "sonar.organization", "hmcts"
     property "sonar.exclusions", "**/exception/*.java,**/domain/*.java,**/common/*.java,**/migration/auth/AuthTokenGeneratorConfiguration.java,**/migration/CaseMigrationRunner.java,**/ccd/HttpMessageConverterConfiguration.java"
     property "sonar.coverage.jacoco.xmlReportPaths", "${project.buildDir}/reports/jacoco/test/jacocoTestReport.xml"
   }
@@ -210,7 +210,7 @@ dependencies {
   implementation group: 'org.springdoc', name: 'springdoc-openapi-starter-webmvc-ui', version: '2.8.14'
 
   // HMCTS
-  implementation group: 'com.github.hmcts', name: 'ccd-client', version: '5.1.1'
+  implementation group: 'com.github.hmcts', name: 'core-case-data-store-client', version: '5.2.0'
   implementation group: 'com.github.hmcts', name: 'idam-java-client', version: '3.0.5'
   implementation group: 'com.github.hmcts', name: 'service-auth-provider-java-client', version: '5.3.3'
   implementation group: 'com.github.hmcts.java-logging', name: 'logging', version: '6.1.9'
