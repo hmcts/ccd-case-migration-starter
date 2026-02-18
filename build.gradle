@@ -171,8 +171,8 @@ ext {
   set('jackson.version', '2.18.2')
   set('snakeyaml.version', '2.3')
   log4JVersion = '2.25.2'
-  junitVersion    = '5.13.4'
-  junitPlatform   = '1.13.4'
+  junitVersion    = '5.14.3'
+  junitPlatform   = '1.14.3'
 
   libraries = [
     junit5: [
