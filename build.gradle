@@ -222,7 +222,6 @@ dependencies {
   testImplementation "io.rest-assured:rest-assured:6.1.0"
   testImplementation "org.springframework.boot:spring-boot-starter-test"
   testImplementation "org.springframework.boot:spring-boot-webmvc-test"
-  testImplementation "org.springframework.cloud:spring-cloud-starter-contract-stub-runner:4.3.4"
 
 }
 
